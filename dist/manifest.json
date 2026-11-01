@@ -1,5 +1,5 @@
 {
-  "version": "1.1.148",
+  "version": "1.1.149",
   "encrypted": true,
   "alg": "chacha20",
   "counter": 1,
@@ -29,11 +29,11 @@
     {
       "name": "03-game.lua",
       "file": "chunks/03-game.lua",
-      "bytes": 910577,
-      "plainBytes": 296136,
-      "obfBytes": 682931,
-      "checksum": 196757348,
-      "sha256": "32d6f89acda37f5c228d48f7658fc400c764d9397e2fdc15e83b3bb73d40e0a7",
+      "bytes": 912157,
+      "plainBytes": 296373,
+      "obfBytes": 684116,
+      "checksum": 3494164755,
+      "sha256": "932a2ccfc9926bf36bab9337ee98131d640672e43eb43ae22db74d736e0de70f",
       "nonce": "AfXOLWcB90Dv2osX",
       "runtime": false
     },
@@ -49,6 +49,6 @@
       "runtime": true
     }
   ],
-  "totalBytes": 1927244,
+  "totalBytes": 1928824,
   "protect": "array+strings+wrap+chacha20"
 }
