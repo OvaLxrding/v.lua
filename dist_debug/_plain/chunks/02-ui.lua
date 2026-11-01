@@ -553,38 +553,107 @@ do
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    library.tappables = library.tappables or {};
+
+    local TAP_MOVE_TOLERANCE = 14;   
+    local TAP_MAX_SECONDS = 0.8;     
+
     local function bindClick(button, handler)
-        local lastFire = 0
+        local lastFire = 0;
 
         local function fire()
-            local now = os.clock()
+            local now = os.clock();
 
-            if (now - lastFire) < 0.25 then return end
+            if (now - lastFire) < 0.25 then return end;
 
-            lastFire = now
-            handler()
-        end
+            lastFire = now;
+            handler();
+        end;
 
+        
         pcall(function()
             library.unloadMaid:GiveTask(button.Activated:Connect(fire))
-        end)
+        end);
 
         pcall(function()
             library.unloadMaid:GiveTask(button.MouseButton1Click:Connect(fire))
-        end)
+        end);
 
-        pcall(function()
-            library.unloadMaid:GiveTask(button.InputBegan:Connect(function(input)
-                local kind = input.UserInputType
+        
+        library.tappables[button] = fire;
+    end;
 
-                if (kind == Enum.UserInputType.Touch
-                    or kind == Enum.UserInputType.MouseButton1
-                    or kind == Enum.UserInputType.MouseButton2) then
-                    fire()
-                end
-            end))
-        end)
-    end
+    
+    if (not library.tapDispatcherInstalled) then
+        library.tapDispatcherInstalled = true;
+
+        local tapStart = nil;
+
+        library.unloadMaid:GiveTask(UserInputService.InputBegan:Connect(function(input)
+            if (input.UserInputType ~= Enum.UserInputType.Touch
+                and input.UserInputType ~= Enum.UserInputType.MouseButton1) then
+                return;
+            end;
+
+            tapStart = {
+                x = input.Position.X;
+                y = input.Position.Y;
+                t = os.clock();
+            };
+        end));
+
+        library.unloadMaid:GiveTask(UserInputService.InputEnded:Connect(function(input)
+            if (input.UserInputType ~= Enum.UserInputType.Touch
+                and input.UserInputType ~= Enum.UserInputType.MouseButton1) then
+                return;
+            end;
+
+            local start = tapStart;
+            tapStart = nil;
+
+            if (not start) then return end;
+
+            local dx = input.Position.X - start.x;
+            local dy = input.Position.Y - start.y;
+
+            
+            if (math.sqrt(dx * dx + dy * dy) > TAP_MOVE_TOLERANCE) then return end;
+
+            if (os.clock() - start.t > TAP_MAX_SECONDS) then return end;
+
+            
+            local best, bestArea = nil, nil;
+            local px, py = input.Position.X, input.Position.Y;
+
+            for object, fire in next, library.tappables do
+                if (object and object.Parent and object.Visible) then
+                    local pos = object.AbsolutePosition;
+                    local size = object.AbsoluteSize;
+
+                    if (px >= pos.X and px <= pos.X + size.X
+                        and py >= pos.Y and py <= pos.Y + size.Y) then
+                        local area = size.X * size.Y;
+
+                        if (not bestArea or area < bestArea) then
+                            best, bestArea = fire, area;
+                        end;
+                    end;
+                end;
+            end;
+
+            if (best) then
+                pcall(best);
+            end;
+        end));
+    end;
 
     local function createToggle(option, parent)
         option.hasInit = true
@@ -602,8 +671,10 @@ do
         local tickboxOverlay
         if option.style then
             tickbox = library:Create('ImageLabel', {
-                Position = UDim2.new(0, 6, 0, 4),
-                Size = UDim2.new(0, 12, 0, 12),
+                AnchorPoint = Vector2.new(0, 0.5),
+                Position = UDim2.new(0, BOX_X, 0.5, 0),
+                Size = UDim2.fromOffset(BOX, BOX),
+                Active = false,
                 BackgroundTransparency = 1,
                 Image = 'rbxassetid://3570695787',
                 ImageColor3 = Color3.new(),
@@ -654,8 +725,10 @@ do
             table.insert(library.theme, tickboxOverlay)
         else
             tickbox = library:Create('Frame', {
-                Position = UDim2.new(0, 6, 0, 4),
-                Size = UDim2.new(0, 12, 0, 12),
+                AnchorPoint = Vector2.new(0, 0.5),
+                Position = UDim2.new(0, BOX_X, 0.5, 0),
+                Size = UDim2.fromOffset(BOX, BOX),
+                Active = false,
                 BackgroundColor3 = library.flags.menuAccentColor,
                 BorderColor3 = Color3.new(),
                 Parent = option.main
@@ -685,19 +758,25 @@ do
         
         
         
+        
+        
+        
         option.interest = library:Create('TextButton', {
             Position = UDim2.new(0, 0, 0, 0),
-            Size = UDim2.new(1, 0, 0, 20),
+            Size = UDim2.new(1, 0, 0, ROW_H),
             BackgroundTransparency = 1,
             AutoButtonColor = false,
+            Active = true,
+            Selectable = true,
             Text = '',
             Parent = option.main
         })
 
         option.title = library:Create('TextLabel', {
-            Position = UDim2.new(0, 24, 0, 0),
-            Size = UDim2.new(1, 0, 1, 0),
+            Position = UDim2.new(0, TEXT_X, 0, 0),
+            Size = UDim2.new(1, -TEXT_X, 1, 0),
             BackgroundTransparency = 1,
+            Active = false,
             Text = option.text,
             TextColor3 =  option.state and Palette.Text or Palette.TextDim,
             TextSize = 15,
@@ -779,16 +858,18 @@ do
 
         option.main = option.sub and option:getMain() or library:Create('Frame', {
             LayoutOrder = option.position,
-            Size = UDim2.new(1, 0, 0, 26),
+            Size = UDim2.new(1, 0, 0, TOUCH_UI and 50 or 26),
             BackgroundTransparency = 1,
             Parent = parent
         })
 
         
         option.title = library:Create('TextButton', {
-            AnchorPoint = Vector2.new(0.5, 1),
-            Position = UDim2.new(0.5, 0, 1, -5),
-            Size = UDim2.new(1, -12, 0, 18),
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            Position = UDim2.new(0.5, 0, 0.5, 0),
+            Size = UDim2.new(1, -12, 0, TOUCH_UI and 40 or 18),
+            Active = true,
+            Selectable = true,
             BackgroundColor3 = Palette.Elevated,
             BorderColor3 = Color3.new(),
             Text = option.text,
