@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 13:45:32
+    生成时间: 2026-11-01 13:54:34
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -15965,6 +15965,14 @@ do
 
 		local UPDATES = {
 			{
+				v = '1.1.98';
+				g = 'Gakuran';
+				at = '2026-11-01 14:05';
+				lines = {
+					'修复反复加载后出现的请求过于频繁报错';
+				};
+			};
+			{
 				v = '1.1.97';
 				g = 'Gakuran';
 				at = '2026-11-01 13:55';
@@ -18380,7 +18388,12 @@ do
             end);
 
             if (not suc) then
-                return warn(userInfos);
+                
+                if (getFlag and getFlag('debugLog', false)) then
+                    warn('[Aimbot] 白名单查询失败: ' .. tostring(userInfos));
+                end;
+
+                return;
             end;
 
             local userInfo = userInfos[1];
@@ -18415,7 +18428,24 @@ do
 
         library.OnLoad:Connect(function()
             local whitelistedPlayers = library.configVars.aimbotWhitelistedPlayers or {};
-            local userInfos = UserService:GetUserInfosByUserIdsAsync(whitelistedPlayers);
+
+            
+            
+            
+            
+            
+            if (#whitelistedPlayers == 0) then
+                return;
+            end;
+
+            
+            local suc, userInfos = pcall(function()
+                return UserService:GetUserInfosByUserIdsAsync(whitelistedPlayers);
+            end);
+
+            if (not suc or type(userInfos) ~= 'table') then
+                return;
+            end;
 
             for _, userInfo in next, userInfos do
                 library.options.aimbotWhitelistedPlayers:AddValue(userInfo.Username);
