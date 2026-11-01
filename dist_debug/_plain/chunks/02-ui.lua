@@ -3493,10 +3493,41 @@ do
     
     
     
+    
     pcall(function()
         if (type(getgenv().vairFinishHint) == 'function') then
             getgenv().vairFinishHint();
         end;
+    end);
+
+    pcall(function()
+        local containers = {};
+        local okHui, hui = pcall(gethui);
+
+        if (okHui and hui) then
+            containers[#containers + 1] = hui;
+        end;
+
+        local playerGui = Players.LocalPlayer
+            and Players.LocalPlayer:FindFirstChildOfClass('PlayerGui');
+
+        if (playerGui) then
+            containers[#containers + 1] = playerGui;
+        end;
+
+        pcall(function()
+            containers[#containers + 1] = game:GetService('CoreGui');
+        end);
+
+        for _, container in next, containers do
+            for _, descendant in next, container:GetChildren() do
+                if (descendant:IsA('ScreenGui') and descendant.Name == 'LoadingHint') then
+                    pcall(function() descendant:Destroy() end);
+                end;
+            end;
+        end;
+
+        getgenv().vairHintGui = nil;
     end);
             getgenv().vairUiReadyAt = os.clock();
         end);

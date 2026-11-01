@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 19:17:55
+    生成时间: 2026-11-01 19:46:47
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -3602,10 +3602,41 @@ do
     
     
     
+    
     pcall(function()
         if (type(getgenv().vairFinishHint) == 'function') then
             getgenv().vairFinishHint();
         end;
+    end);
+
+    pcall(function()
+        local containers = {};
+        local okHui, hui = pcall(gethui);
+
+        if (okHui and hui) then
+            containers[#containers + 1] = hui;
+        end;
+
+        local playerGui = Players.LocalPlayer
+            and Players.LocalPlayer:FindFirstChildOfClass('PlayerGui');
+
+        if (playerGui) then
+            containers[#containers + 1] = playerGui;
+        end;
+
+        pcall(function()
+            containers[#containers + 1] = game:GetService('CoreGui');
+        end);
+
+        for _, container in next, containers do
+            for _, descendant in next, container:GetChildren() do
+                if (descendant:IsA('ScreenGui') and descendant.Name == 'LoadingHint') then
+                    pcall(function() descendant:Destroy() end);
+                end;
+            end;
+        end;
+
+        getgenv().vairHintGui = nil;
     end);
             getgenv().vairUiReadyAt = os.clock();
         end);
@@ -16415,7 +16446,14 @@ do
 		
 		prevAutoRotate = nil;
 
-		if (library.flags.followPlayer) then
+		
+		
+		
+		local followOption = library.options.followPlayer;
+
+		if (followOption and type(followOption.SetState) == 'function') then
+			pcall(followOption.SetState, followOption, false, true);
+		else
 			library.flags.followPlayer = false;
 		end;
 
@@ -16510,7 +16548,14 @@ do
 
 		
 		stop();
-		library.flags.followPlayer = true;
+		local followOptionOn = library.options.followPlayer;
+
+		if (followOptionOn and type(followOptionOn.SetState) == 'function') then
+			pcall(followOptionOn.SetState, followOptionOn, true, true);
+		else
+			library.flags.followPlayer = true;
+		end;
+
 		followPlayer = target;
 
 		
@@ -16559,11 +16604,12 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.156';
+				v = '1.1.157';
 				g = 'Gakuran';
 				at = '2026-11-01 19:10';
 				lines = {
 					'修复加载提示条偶发卡住不消失';
+					'不再自动改写用户设置';
 					'手机端开关改成整行可点，行高放大到适合手指';
 					'修复手机端开关点不动（滚动容器吞掉点按）';
 				};
@@ -18709,8 +18755,6 @@ end;
 	
 	
 	
-	local grappleDefaultApplied = false;
-	local timingMigrated = false;
 
 	task.spawn(function()
 		for _ = 1, 3600 do
@@ -18730,79 +18774,6 @@ end;
 					functions.autoParry(true);
 				end;
 			end);
-
-			
-			
-			
-			
-			if (not timingMigrated and getgenv().vairUiReady == true and library.hasInit == true) then
-				local compOpt = library.options.pingCompensation;
-
-				if (compOpt and type(compOpt.SetValue) == 'function'
-					and tonumber(library.flags.pingCompensation) == 50) then
-					pcall(function() compOpt:SetValue(100) end);
-				end;
-
-				timingMigrated = true;
-			end;
-
-			
-			
-			
-			if (not grappleDefaultApplied and getgenv().vairUiReady == true
-				and library.hasInit == true and not isStale()) then
-				local map = library.flags.grappleStyles;
-				local anyTrue = false;
-
-				if (type(map) == 'table') then
-					for _, v in next, map do
-						if (v == true) then anyTrue = true break end;
-					end;
-				end;
-
-				
-				local onlyOldBoxing = false;
-
-				if (type(map) == 'table') then
-					local count = 0;
-					onlyOldBoxing = true;
-
-					for k, v in next, map do
-						if (v == true) then
-							count += 1;
-
-							if (k ~= 'boxing') then onlyOldBoxing = false break end;
-						end;
-					end;
-
-					onlyOldBoxing = onlyOldBoxing and count == 1;
-				end;
-
-				if (not anyTrue or onlyOldBoxing) then
-					local opt = library.options.grappleStyles;
-
-					
-					if (opt and type(opt.SetValue) == 'function' and type(opt.values) == 'table' and #opt.values > 0) then
-						local init = {};
-
-						for _, name in next, opt.values do
-							init[name] = (name == 'wrestling'
-								or name == 'wrestling (觉醒)'
-								or name == 'muaythai (觉醒)'
-								or name == 'perfectcopy');
-						end;
-
-						local applied = pcall(function() opt:SetValue(init) end);
-
-						if (applied) then
-							grappleDefaultApplied = true;
-						end;
-					end;
-					
-				else
-					grappleDefaultApplied = true;
-				end;
-			end;
 		end;
 	end);
 
@@ -18899,71 +18870,9 @@ end;
 
 	
 	
-	task.delay(0.7, function()
-		local configVars = library.configVars;
-
-		if (type(configVars) ~= 'table') then return end;
-		if (configVars.punchModeMerged) then return end;
-
-		configVars.punchModeMerged = true;
-		configVars.punchMode = nil;
-
-		if (library.flags.punchMode ~= nil) then
-			library.flags.punchMode = nil;
-		end;
-	end);
-
 	
 	
-	task.delay(0.7, function()
-		local configVars = library.configVars;
-
-		if (type(configVars) ~= 'table') then return end;
-		if (configVars.parryPriorityDisabled) then return end;
-
-		configVars.parryPriorityDisabled = true;
-
-		if (library.flags.parryPriority == true) then
-			library.flags.parryPriority = false;
-
-			local option = library.options.parryPriority;
-
-			if (option and type(option.SetState) == 'function') then
-				pcall(option.SetState, option, false);
-			end;
-		end;
-	end);
-
 	
-	
-	task.delay(0.6, function()
-		local configVars = library.configVars;
-
-		if (type(configVars) ~= 'table') then return end;
-		if (configVars.parryDefaultsReverted) then return end;
-
-		configVars.parryDefaultsReverted = true;
-
-		if (tonumber(library.flags.serverBlockGate) == 150) then
-			library.flags.serverBlockGate = 250;
-
-			local gateOption = library.options.serverBlockGate;
-
-			if (gateOption and type(gateOption.SetValue) == 'function') then
-				pcall(gateOption.SetValue, gateOption, 250);
-			end;
-		end;
-
-		if (tonumber(library.flags.blockBurst) == 2) then
-			library.flags.blockBurst = 1;
-
-			local burstOption = library.options.blockBurst;
-
-			if (burstOption and type(burstOption.SetValue) == 'function') then
-				pcall(burstOption.SetValue, burstOption, 1);
-			end;
-		end;
-	end);
 
 
 	
@@ -19066,8 +18975,10 @@ local function updateCircleProp(property)
     return function(value)
         if (property == "NumSides" and value == 50) then
             value = 500;
-        elseif (property == "Filled" and library.flags.circleTransparency == 1) then
-            library.flags.circleTransparency = 0.9;
+        elseif (property == "Filled" and Circle.Transparency == 1) then
+            
+            
+            
             Circle.Transparency = 0.9;
         end
         Circle[property] = value;
@@ -19483,7 +19394,10 @@ espSettings:AddToggle({
     max = 10000,
     callback = function(value)
         if (value == 10000) then
-            value = math.huge;
+            
+            
+            
+            value = 1e7;
         end;
 
         library.flags.maxEspDistance = value;
