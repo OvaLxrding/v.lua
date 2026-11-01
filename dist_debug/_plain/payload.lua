@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 21:56:40
+    生成时间: 2026-11-01 22:14:40
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -15788,6 +15788,26 @@ do
 	
 	
 	
+	
+	
+	
+	
+	local function usableName(value)
+		if (type(value) ~= 'string') then return false end;
+
+		value = value:gsub('^%s+', ''):gsub('%s+$', '');
+
+		if (#value < 3) then return false end;
+		if (value == ANON_NAME) then return false end;
+		if (ANON_NAME:find(value, 1, true)) then return false end;
+		if (value:find(ANON_NAME, 1, true)) then return false end;
+
+		return true;
+	end;
+
+	
+	
+	
 	local function sortNames(names)
 		local list = {};
 
@@ -15808,6 +15828,8 @@ do
 		local touched = false;
 
 		for _, name in next, sorted do
+			if (not usableName(name)) then continue end;
+
 			
 			local pattern = name:gsub('%W', '%%%0');
 			local result, count = replaced:gsub(pattern, ANON_NAME);
@@ -15859,25 +15881,25 @@ do
 
 		local names = {};
 
-		if (player.Name ~= '') then
+		if (usableName(player.Name)) then
 			names[player.Name] = true;
 		end;
 
 		local display = player.DisplayName;
 
-		if (display and display ~= '' and display ~= player.Name) then
+		if (display and display ~= player.Name and usableName(display)) then
 			names[display] = true;
 		end;
 
-		if (character.Name ~= '') then
+		if (usableName(character.Name)) then
 			names[character.Name] = true;
+		end;
 
-			
-			
-			for token in string.gmatch(character.Name, '%S+') do
-				if (#token >= 3) then
-					names[token] = true;
-				end;
+		
+		
+		for token in string.gmatch(character.Name, '%S+') do
+			if (usableName(token)) then
+				names[token] = true;
 			end;
 		end;
 
@@ -16066,8 +16088,257 @@ do
 		end;
 	end;
 
+
+	
+	
+	
+	
+	
+	
+	
+	
+	local function replacePlain(text, needle, replacement)
+		local out = {};
+		local i = 1;
+
+		while (true) do
+			local s, e = text:find(needle, i, true);
+
+			if (not s) then
+				out[#out + 1] = text:sub(i);
+				break;
+			end;
+
+			out[#out + 1] = text:sub(i, s - 1);
+			out[#out + 1] = replacement;
+			i = e + 1;
+		end;
+
+		return table.concat(out);
+	end;
+
+	
+	local function allNamesFor(character)
+		local names = {};
+
+		local function add(value)
+			if (type(value) ~= 'string') then return end;
+
+			value = value:gsub('^%s+', ''):gsub('%s+$', '');
+
+			
+			if (not usableName(value)) then return end;
+
+			names[value] = true;
+
+			
+			for token in string.gmatch(value, '%S+') do
+				if (#token >= 3) then
+					names[token] = true;
+				end;
+			end;
+		end;
+
+		add(character.Name);
+
+		local humanoid = character:FindFirstChildOfClass('Humanoid');
+
+		if (humanoid) then
+			pcall(function() add(humanoid.DisplayName) end);
+		end;
+
+		local player = Players:GetPlayerFromCharacter(character);
+
+		if (player) then
+			add(player.Name);
+
+			pcall(function() add(player.DisplayName) end);
+		end;
+
+		
+		for _, attributeName in next, { 'Name', 'DisplayName', 'Nickname', 'PlayerName', 'FakeName' } do
+			local ok, value = pcall(function() return character:GetAttribute(attributeName) end);
+
+			if (ok) then
+				add(value);
+			end;
+		end;
+
+		return names;
+	end;
+
+	local function shouldPatchHere(instance)
+		local current = instance;
+
+		while (current and current ~= workspace) do
+			if (current:IsA('BillboardGui')) then
+				return true;
+			end;
+
+			if (current.Name == INFO_GUI_NAME or current.Name == 'PlayerInfoGui') then
+				return true;
+			end;
+
+			current = current.Parent;
+		end;
+
+		return false;
+	end;
+
+	
+	local function patchGeneric(character)
+		
+		local owner = Players:GetPlayerFromCharacter(character);
+		local wanted;
+
+		if (owner) then
+			wanted = (owner == LocalPlayer) and anonSelf or anonOther;
+		else
+			wanted = anonOther;
+		end;
+
+		if (not wanted) then return 0 end;
+
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		local changed = 0;
+
+		for _, descendant in next, character:GetDescendants() do
+			local className = descendant.ClassName;
+
+			if (className ~= 'TextLabel' and className ~= 'TextButton') then
+				continue;
+			end;
+
+			if (not shouldPatchHere(descendant)) then
+				continue;
+			end;
+
+			local raw = descendant.Text;
+
+			if (type(raw) ~= 'string' or raw == '') then
+				continue;
+			end;
+
+			local target = ANON_NAME;
+
+			
+			if (descendant.Name == 'Username' or raw:find('@', 1, true)) then
+				target = '(@' .. ANON_NAME .. ')';
+			end;
+
+			if (originalLabels[descendant] == nil) then
+				
+				
+				if (not raw:find(ANON_NAME, 1, true)) then
+					originalLabels[descendant] = raw;
+				end;
+			end;
+
+			if (raw ~= target) then
+				pcall(function() descendant.Text = target end);
+				changed = changed + 1;
+			end;
+
+			
+			
+			if (not billboardHooks[descendant]) then
+				local connection;
+
+				local okHook = pcall(function()
+					connection = descendant:GetPropertyChangedSignal('Text'):Connect(function()
+						if (not (anonSelf or anonOther)) then return end;
+						if (descendant:GetAttribute('VairAnonWriting')) then return end;
+
+						local latest = descendant.Text;
+
+						if (type(latest) ~= 'string' or latest == '') then return end;
+
+						local want = ANON_NAME;
+
+						if (descendant.Name == 'Username' or latest:find('@', 1, true)) then
+							want = '(@' .. ANON_NAME .. ')';
+						end;
+
+						if (latest ~= want) then
+							pcall(function()
+								descendant:SetAttribute('VairAnonWriting', true);
+								descendant.Text = want;
+								descendant:SetAttribute('VairAnonWriting', false);
+							end);
+						end;
+					end);
+				end);
+
+				if (okHook and connection) then
+					billboardHooks[descendant] = connection;
+				end;
+			end;
+		end;
+
+		return changed;
+	end;
+
+	
+	getgenv().__gakuranAnonScan = function()
+		local report = {};
+
+		local function scanCharacter(character, label)
+			if (not character) then return end;
+
+			local entries = {};
+
+			for _, descendant in next, character:GetDescendants() do
+				local className = descendant.ClassName;
+
+				if (className ~= 'TextLabel' and className ~= 'TextButton') then
+					continue;
+				end;
+
+				if (not shouldPatchHere(descendant)) then
+					continue;
+				end;
+
+				entries[#entries + 1] = string.format('%s.%s="%s"',
+					tostring(descendant.Parent and descendant.Parent.Name),
+					tostring(descendant.Name),
+					tostring(descendant.Text):sub(1, 40));
+			end;
+
+			report[#report + 1] = string.format('[%s] %s: %d 处 -> %s',
+				label, character.Name, #entries, table.concat(entries, ' , '):sub(1, 300));
+		end;
+
+		scanCharacter(LocalPlayer and LocalPlayer.Character, 'self');
+
+		local otherCount = 0;
+
+		for _, player in next, Players:GetPlayers() do
+			if (player ~= LocalPlayer and player.Character and otherCount < 1) then
+				scanCharacter(player.Character, 'other');
+				otherCount = otherCount + 1;
+			end;
+		end;
+
+		report[#report + 1] = 'anonSelf=' .. tostring(anonSelf) .. ' anonOther=' .. tostring(anonOther);
+
+		return table.concat(report, ' | ');
+	end;
+
 	local function patchCharacter(character)
 		if (not character or not character.Parent) then return end;
+
+		
+		
+		
+		pcall(patchGeneric, character);
 
 		local names = namesFor(character);
 
@@ -16137,9 +16408,10 @@ do
 		end;
 
 		
-		if (names) then
-			patchCharacter(character);
-		end;
+		
+		
+		
+		patchCharacter(character);
 	end;
 
 	local function applyAll()
@@ -16911,9 +17183,49 @@ do
 
 		local UPDATES = {
 			{
+				v = '1.1.177';
+				g = 'Gakuran';
+				at = '2026-11-01 22:14';
+				lines = {
+					'更新页时间统一为北京时间';
+				};
+			};
+			{
+				v = '1.1.176';
+				g = 'Gakuran';
+				at = '2026-11-01 22:14';
+				lines = {
+					'匿名账号栏保留括号写法';
+				};
+			};
+			{
+				v = '1.1.175';
+				g = 'Gakuran';
+				at = '2026-11-01 22:02';
+				lines = {
+					'匿名模式改为按结构生效，不再依赖控件名';
+				};
+			};
+			{
+				v = '1.1.174';
+				g = 'Gakuran';
+				at = '2026-11-01 21:50';
+				lines = {
+					'修复匿名名反复叠加、匿名模式失效';
+				};
+			};
+			{
+				v = '1.1.173';
+				g = 'Gakuran';
+				at = '2026-11-01 21:38';
+				lines = {
+					'修复匿名模式失效';
+				};
+			};
+			{
 				v = '1.1.172';
 				g = 'Gakuran';
-				at = '2026-11-01 23:25';
+				at = '2026-11-01 21:26';
 				lines = {
 					'修复手机端滑块拖不动';
 				};
@@ -16921,7 +17233,7 @@ do
 			{
 				v = '1.1.171';
 				g = 'Gakuran';
-				at = '2026-11-01 23:10';
+				at = '2026-11-01 21:14';
 				lines = {
 					'修复手机端滑块拖不动';
 				};
@@ -16929,7 +17241,7 @@ do
 			{
 				v = '1.1.170';
 				g = 'Gakuran';
-				at = '2026-11-01 22:50';
+				at = '2026-11-01 21:02';
 				lines = {
 					'界面收起后彻底停止点击响应';
 				};
@@ -16937,7 +17249,7 @@ do
 			{
 				v = '1.1.169';
 				g = 'Gakuran';
-				at = '2026-11-01 22:35';
+				at = '2026-11-01 20:50';
 				lines = {
 					'修复点击命中其它页签的控件';
 				};
@@ -16945,7 +17257,7 @@ do
 			{
 				v = '1.1.168';
 				g = 'Gakuran';
-				at = '2026-11-01 22:20';
+				at = '2026-11-01 20:38';
 				lines = {
 					'界面收起后原位置不再响应点击';
 				};
@@ -16953,7 +17265,7 @@ do
 			{
 				v = '1.1.167';
 				g = 'Gakuran';
-				at = '2026-11-01 22:00';
+				at = '2026-11-01 20:13';
 				lines = {
 					'修复界面收起后原位置仍可点';
 				};
@@ -16961,7 +17273,7 @@ do
 			{
 				v = '1.1.166';
 				g = 'Gakuran';
-				at = '2026-11-01 21:45';
+				at = '2026-11-01 19:48';
 				lines = {
 					'统一恢复出厂界面布局，修复控件重叠与点错';
 				};
@@ -16969,7 +17281,7 @@ do
 			{
 				v = '1.1.165';
 				g = 'Gakuran';
-				at = '2026-11-01 21:30';
+				at = '2026-11-01 19:23';
 				lines = {
 					'修复电脑端界面错位、控件重叠';
 				};
@@ -16977,7 +17289,7 @@ do
 			{
 				v = '1.1.164';
 				g = 'Gakuran';
-				at = '2026-11-01 21:15';
+				at = '2026-11-01 18:58';
 				lines = {
 					'修复切换页签时误触发其它页的开关';
 				};
@@ -16985,7 +17297,7 @@ do
 			{
 				v = '1.1.163';
 				g = 'Gakuran';
-				at = '2026-11-01 21:00';
+				at = '2026-11-01 18:33';
 				lines = {
 					'修复确认弹窗点不到按钮、卡死';
 				};
@@ -16993,7 +17305,7 @@ do
 			{
 				v = '1.1.162';
 				g = 'Gakuran';
-				at = '2026-11-01 20:45';
+				at = '2026-11-01 18:08';
 				lines = {
 					'配置作用域切换改为二次确认';
 					'修复确认弹窗在手机上点不动';
@@ -17002,7 +17314,7 @@ do
 			{
 				v = '1.1.161';
 				g = 'Gakuran';
-				at = '2026-11-01 20:30';
+				at = '2026-11-01 17:43';
 				lines = {
 					'更新页每个版本分开显示';
 					'修复切换页签改动配置';
@@ -17011,7 +17323,7 @@ do
 			{
 				v = '1.1.160';
 				g = 'Gakuran';
-				at = '2026-11-01 20:10';
+				at = '2026-11-01 17:18';
 				lines = {
 					'关闭界面快捷键不再误触发卸载';
 					'点击面板外不再穿透触发内部按钮';
@@ -17020,7 +17332,7 @@ do
 			{
 				v = '1.1.159';
 				g = 'Gakuran';
-				at = '2026-11-01 20:00';
+				at = '2026-11-01 15:18';
 				lines = {
 					'修复切换页签把未打开页面的设置重置为默认';
 				};
@@ -17028,7 +17340,7 @@ do
 			{
 				v = '1.1.158';
 				g = 'Gakuran';
-				at = '2026-11-01 19:50';
+				at = '2026-11-01 13:18';
 				lines = {
 					'修复加载失败时默认值覆盖用户配置';
 				};
@@ -17036,7 +17348,7 @@ do
 			{
 				v = '1.1.157';
 				g = 'Gakuran';
-				at = '2026-11-01 19:40';
+				at = '2026-11-01 11:18';
 				lines = {
 					'不再自动改写用户设置';
 				};
@@ -17044,7 +17356,7 @@ do
 			{
 				v = '1.1.156';
 				g = 'Gakuran';
-				at = '2026-11-01 19:25';
+				at = '2026-11-01 09:18';
 				lines = {
 					'修复部分页签空白、界面建不完整';
 				};
@@ -17052,7 +17364,7 @@ do
 			{
 				v = '1.1.155';
 				g = 'Gakuran';
-				at = '2026-11-01 19:18';
+				at = '2026-11-01 07:18';
 				lines = {
 					'修复手机端开关点不动';
 				};
@@ -17060,7 +17372,7 @@ do
 			{
 				v = '1.1.154';
 				g = 'Gakuran';
-				at = '2026-11-01 19:15';
+				at = '2026-11-01 05:18';
 				lines = {
 					'手机端开关改成整行可点，行高放大';
 				};
@@ -17068,7 +17380,7 @@ do
 			{
 				v = '1.1.152';
 				g = 'Gakuran';
-				at = '2026-11-01 19:05';
+				at = '2026-11-01 03:18';
 				lines = {
 					'修复加载提示条偶发卡住不消失';
 				};
@@ -17076,7 +17388,7 @@ do
 			{
 				v = '1.1.151';
 				g = 'Gakuran';
-				at = '2026-11-01 18:20';
+				at = '2026-11-01 01:18';
 				lines = {
 					'吸附移除死区，始终精确贴合目标';
 				};
@@ -17084,7 +17396,7 @@ do
 			{
 				v = '1.1.150';
 				g = 'Gakuran';
-				at = '2026-11-01 18:05';
+				at = '2026-10-31 19:18';
 				lines = {
 					'弹反改为按实测延迟自动校准';
 				};
@@ -17092,7 +17404,7 @@ do
 			{
 				v = '1.1.149';
 				g = 'Gakuran';
-				at = '2026-11-01 17:50';
+				at = '2026-10-31 13:18';
 				lines = {
 					'吸附时角色始终面朝目标，不再左右乱转';
 				};
@@ -17100,7 +17412,7 @@ do
 			{
 				v = '1.1.148';
 				g = 'Gakuran';
-				at = '2026-11-01 17:35';
+				at = '2026-10-31 07:18';
 				lines = {
 					'调试统计显示被僵直拦下的次数';
 				};
@@ -17108,7 +17420,7 @@ do
 			{
 				v = '1.1.146';
 				g = 'Gakuran';
-				at = '2026-11-01 17:20';
+				at = '2026-10-31 01:18';
 				lines = {
 					'修复吸附悬停时上下晃动';
 				};
@@ -17116,7 +17428,7 @@ do
 			{
 				v = '1.1.145';
 				g = 'Gakuran';
-				at = '2026-11-01 17:05';
+				at = '2026-10-30 19:18';
 				lines = {
 					'吸附时角色贴地站立，不再悬空';
 					'吸附到位后保持静止，不再一直播移动动画';
@@ -17125,7 +17437,7 @@ do
 			{
 				v = '1.1.144';
 				g = 'Gakuran';
-				at = '2026-11-01 16:50';
+				at = '2026-10-30 13:18';
 				lines = {
 					'修复手机端开关和按钮点不动';
 				};
@@ -17133,7 +17445,7 @@ do
 			{
 				v = '1.1.143';
 				g = 'Gakuran';
-				at = '2026-11-01 16:35';
+				at = '2026-10-30 07:18';
 				lines = {
 					'弹反手感优化，格挡判定更准';
 					'吸附功能修复，不再被拉回原位';
@@ -17142,7 +17454,7 @@ do
 			{
 				v = '1.1.142';
 				g = 'Gakuran';
-				at = '2026-11-01 16:20';
+				at = '2026-10-30 01:18';
 				lines = {
 					'修复弹反成功次数不统计';
 					'修复飞行复活后被传送回旧位置';
@@ -17153,7 +17465,7 @@ do
 			{
 				v = '1.1.121';
 				g = 'Gakuran';
-				at = '2026-11-01 15:40';
+				at = '2026-10-29 19:18';
 				lines = {
 					'优化弹反判定数据';
 					'修正玩家与敌人的判定比例';
@@ -17162,7 +17474,7 @@ do
 			{
 				v = '1.1.118';
 				g = 'Gakuran';
-				at = '2026-11-01 15:15';
+				at = '2026-10-29 13:18';
 				lines = {
 					'修复被连击时弹反不出来';
 				};
@@ -17170,7 +17482,7 @@ do
 			{
 				v = '1.1.117';
 				g = 'Gakuran';
-				at = '2026-11-01 15:00';
+				at = '2026-10-29 07:18';
 				lines = {
 					'修复匿名模式死亡后恢复原名';
 					'修复血量体力面板重影';
@@ -17179,7 +17491,7 @@ do
 			{
 				v = '1.1.111';
 				g = 'Gakuran';
-				at = '2026-11-01 14:45';
+				at = '2026-10-29 01:18';
 				lines = {
 					'抓取后撤支持区分觉醒流派';
 				};
@@ -17187,7 +17499,7 @@ do
 			{
 				v = '1.1.107';
 				g = 'Gakuran';
-				at = '2026-11-01 14:20';
+				at = '2026-10-28 19:18';
 				lines = {
 					'修复自动弹反偶尔完全不生效';
 				};
@@ -17195,7 +17507,7 @@ do
 			{
 				v = '1.1.105';
 				g = 'Gakuran';
-				at = '2026-11-01 14:00';
+				at = '2026-10-28 13:18';
 				lines = {
 					'调试统计改为界面显示';
 				};
@@ -17203,7 +17515,7 @@ do
 			{
 				v = '1.1.100';
 				g = 'Gakuran';
-				at = '2026-11-01 13:50';
+				at = '2026-10-28 07:18';
 				lines = {
 					'移除连段保持';
 					'补全攻击动画表';
@@ -17212,7 +17524,7 @@ do
 			{
 				v = '1.1.98';
 				g = 'Gakuran';
-				at = '2026-11-01 14:05';
+				at = '2026-10-28 01:18';
 				lines = {
 					'修复反复加载后出现的请求过于频繁报错';
 				};
@@ -17220,7 +17532,7 @@ do
 			{
 				v = '1.1.97';
 				g = 'Gakuran';
-				at = '2026-11-01 13:55';
+				at = '2026-10-27 19:18';
 				lines = {
 					'修复手机端开关和按钮点不动';
 				};
@@ -17228,7 +17540,7 @@ do
 			{
 				v = '1.1.96';
 				g = 'Gakuran';
-				at = '2026-11-01 13:40';
+				at = '2026-10-27 13:18';
 				lines = {
 					'修复加载提示条一直挂在屏幕顶部不消失';
 				};
@@ -17244,7 +17556,7 @@ do
 
 			shown += 1;
 
-			section:AddDivider(entry.g .. '   ' .. entry.v .. '   ' .. entry.at);
+			section:AddDivider(entry.g .. '   ' .. entry.v .. '   ' .. entry.at .. '  北京时间');
 
 			for _, line in next, entry.lines do
 				section:AddLabel(line);
