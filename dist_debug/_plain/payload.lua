@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 22:37:36
+    生成时间: 2026-11-01 22:47:54
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -15801,6 +15801,7 @@ do
 	local sortedCache = setmetatable({}, { __mode = 'k' });       
 	local billboardHooks = setmetatable({}, { __mode = 'k' });    
 	local playerHooks = {};                                        
+	local nameOriginals = setmetatable({}, { __mode = 'k' });      
 
 	
 	
@@ -16251,11 +16252,24 @@ do
 				target = '(@' .. ANON_NAME .. ')';
 			end;
 
-			if (originalLabels[descendant] == nil) then
-				
-				
-				if (not raw:find(ANON_NAME, 1, true)) then
+			if (not raw:find(ANON_NAME, 1, true)) then
+				if (originalLabels[descendant] == nil) then
+					
+					
 					originalLabels[descendant] = raw;
+				end;
+
+				
+				
+				local store = nameOriginals[character];
+
+				if (not store) then
+					store = {};
+					nameOriginals[character] = store;
+				end;
+
+				if (store[descendant.Name] == nil) then
+					store[descendant.Name] = raw;
 				end;
 			end;
 
@@ -16467,6 +16481,59 @@ do
 					pcall(function()
 						label.Text = value;
 					end);
+				end;
+			end;
+
+			
+			
+			
+			for _, player in next, Players:GetPlayers() do
+				local character = player.Character;
+
+				if (not character) then continue end;
+
+				local realName = player.DisplayName;
+
+				if (type(realName) ~= 'string' or realName == '') then
+					realName = player.Name;
+				end;
+
+				for _, descendant in next, character:GetDescendants() do
+					local className = descendant.ClassName;
+
+					if (className ~= 'TextLabel' and className ~= 'TextButton') then
+						continue;
+					end;
+
+					local raw = descendant.Text;
+
+					if (type(raw) ~= 'string' or not raw:find(ANON_NAME, 1, true)) then
+						continue;
+					end;
+
+					local restored = pending[descendant];
+
+					if (type(restored) ~= 'string' or restored == ''
+						or restored:find(ANON_NAME, 1, true)) then
+						local store = nameOriginals[character];
+						local byName = store and store[descendant.Name];
+
+						if (type(byName) == 'string' and byName ~= ''
+							and not byName:find(ANON_NAME, 1, true)) then
+							restored = byName;
+						end;
+					end;
+
+					if (type(restored) ~= 'string' or restored == ''
+						or restored:find(ANON_NAME, 1, true)) then
+						restored = realName;
+
+						if (raw:find('@', 1, true) or descendant.Name == 'Username') then
+							restored = '(@' .. realName .. ')';
+						end;
+					end;
+
+					pcall(function() descendant.Text = restored end);
 				end;
 			end;
 		end);
@@ -17199,6 +17266,14 @@ do
 		local section = column:AddSection('版本更新');
 
 		local UPDATES = {
+			{
+				v = '1.1.180';
+				g = 'Gakuran';
+				at = '2026-11-01 22:55';
+				lines = {
+					'修复关闭匿名后名字不还原';
+				};
+			};
 			{
 				v = '1.1.179';
 				g = 'Gakuran';
