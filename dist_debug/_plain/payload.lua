@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 20:12:05
+    生成时间: 2026-11-01 20:27:06
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -3060,8 +3060,10 @@ do
                 })
 
                 if warning.type == 'confirm' then
-                    local button = library:Create('TextLabel', {
+                    local button = library:Create('TextButton', {
                         ZIndex = 2,
+                        Active = true,
+                        AutoButtonColor = false,
                         Position = UDim2.new(0.5, -105, 0.5, 8),
                         Size = UDim2.new(0, 100, 0, 20),
                         BackgroundColor3 = Palette.Elevated,
@@ -3079,8 +3081,10 @@ do
                         ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                         Parent = button
                     })
-                    local button1 = library:Create('TextLabel', {
+                    local button1 = library:Create('TextButton', {
                         ZIndex = 2,
+                        Active = true,
+                        AutoButtonColor = false,
                         Position = UDim2.new(0.5, 5, 0.5, 8),
                         Size = UDim2.new(0, 100, 0, 20),
                         BackgroundColor3 = Palette.Elevated,
@@ -3098,10 +3102,18 @@ do
                         ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                         Parent = button1
                     })
+                    library.unloadMaid:GiveTask(button.Activated:Connect(function()
+                        answer = true;
+                    end));
+
                     library.unloadMaid:GiveTask(button.InputBegan:connect(function(input)
                         if isPrimaryInput(input) then
                             answer = true
                         end
+                    end));
+
+                    library.unloadMaid:GiveTask(button1.Activated:Connect(function()
+                        answer = false;
                     end));
 
                     library.unloadMaid:GiveTask(button1.InputBegan:connect(function(input)
@@ -3109,9 +3121,32 @@ do
                             answer = false
                         end
                     end));
+                    
+                    
+                    
+                    
+                    library.unloadMaid:GiveTask(warning.main.InputBegan:Connect(function(input)
+                        if (not isPrimaryInput(input)) then return end;
+
+                        local pos = input.Position;
+                        local function inside(obj)
+                            if (not obj or not obj.Visible) then return false end;
+
+                            local p, s = obj.AbsolutePosition, obj.AbsoluteSize;
+
+                            return pos.X >= p.X and pos.X <= p.X + s.X
+                                and pos.Y >= p.Y and pos.Y <= p.Y + s.Y;
+                        end;
+
+                        if (inside(button) or inside(button1)) then return end;
+
+                        answer = false;
+                    end));
                 else
-                    local button = library:Create('TextLabel', {
+                    local button = library:Create('TextButton', {
                         ZIndex = 2,
+                        Active = true,
+                        AutoButtonColor = false,
                         Position = UDim2.new(0.5, -50, 0.5, 8),
                         Size = UDim2.new(0, 100, 0, 20),
                         BackgroundColor3 = Palette.Second,
@@ -3122,6 +3157,10 @@ do
                         TextColor3 = Color3.new(1, 1, 1),
                         Parent = warning.main
                     })
+
+                    library.unloadMaid:GiveTask(button.Activated:Connect(function()
+                        answer = true;
+                    end));
 
                     library.unloadMaid:GiveTask(button.InputEnded:connect(function(input)
                         if isPrimaryInput(input) then
@@ -3153,7 +3192,14 @@ do
 
             warning.message.Size = UDim2.new(1, -40, 0, messageHeight)
 
-            repeat task.wait() until answer ~= nil;
+            
+            
+            
+            local deadline = os.clock() + 60;
+
+            repeat
+                task.wait();
+            until answer ~= nil or os.clock() > deadline;
             library.warning = nil;
 
             local answerCopy = answer;
@@ -4187,14 +4233,31 @@ settingsMain:AddBox({
 
         local btn;
         btn = configSection:AddButton({
-            text = isGlobalConfigOn and 'Switch To Local Config' or 'Switch to Global Config';
+            text = isGlobalConfigOn and '切换到本地配置' or '切换到全局配置';
 
             callback = function()
+                
+                
+                
+                
+                
+                
+                
+                
+                task.spawn(function()
+                local confirmed = library:ShowConfirm(
+                    '切换配置作用域后需要重新加载脚本才会生效。\n\n'
+                    .. '当前配置不会丢失，但下次启动会读取另一套配置。\n\n确定要切换吗？'
+                );
+
+                if (not confirmed) then return end;
+
                 isGlobalConfigOn = not isGlobalConfigOn;
                 writefile(globalConfFilePath, tostring(isGlobalConfigOn));
 
-                btn:SetText(isGlobalConfigOn and 'Switch To Local Config' or 'Switch to Global Config');
-                library:ShowMessage('Note: Switching from Local to Global requires script relaunch.');
+                btn:SetText(isGlobalConfigOn and '切换到本地配置' or '切换到全局配置');
+                library:ShowMessage('已切换配置作用域，重新加载脚本后生效。');
+                end);
             end
         });
 
@@ -16727,18 +16790,94 @@ do
 
 		local UPDATES = {
 			{
+				v = '1.1.163';
+				g = 'Gakuran';
+				at = '2026-11-01 21:00';
+				lines = {
+					'修复确认弹窗点不到按钮、卡死';
+				};
+			};
+			{
+				v = '1.1.162';
+				g = 'Gakuran';
+				at = '2026-11-01 20:45';
+				lines = {
+					'配置作用域切换改为二次确认';
+					'修复确认弹窗在手机上点不动';
+				};
+			};
+			{
+				v = '1.1.161';
+				g = 'Gakuran';
+				at = '2026-11-01 20:30';
+				lines = {
+					'更新页每个版本分开显示';
+					'修复切换页签改动配置';
+				};
+			};
+			{
 				v = '1.1.160';
 				g = 'Gakuran';
-				at = '2026-11-01 19:10';
+				at = '2026-11-01 20:10';
 				lines = {
-					'修复加载提示条偶发卡住不消失';
-					'不再自动改写用户设置';
-					'修复加载失败时默认值覆盖用户配置';
-					'修复切换页签把未初始化页面的设置重置为默认';
 					'关闭界面快捷键不再误触发卸载';
 					'点击面板外不再穿透触发内部按钮';
-					'手机端开关改成整行可点，行高放大到适合手指';
-					'修复手机端开关点不动（滚动容器吞掉点按）';
+				};
+			};
+			{
+				v = '1.1.159';
+				g = 'Gakuran';
+				at = '2026-11-01 20:00';
+				lines = {
+					'修复切换页签把未打开页面的设置重置为默认';
+				};
+			};
+			{
+				v = '1.1.158';
+				g = 'Gakuran';
+				at = '2026-11-01 19:50';
+				lines = {
+					'修复加载失败时默认值覆盖用户配置';
+				};
+			};
+			{
+				v = '1.1.157';
+				g = 'Gakuran';
+				at = '2026-11-01 19:40';
+				lines = {
+					'不再自动改写用户设置';
+				};
+			};
+			{
+				v = '1.1.156';
+				g = 'Gakuran';
+				at = '2026-11-01 19:25';
+				lines = {
+					'修复部分页签空白、界面建不完整';
+				};
+			};
+			{
+				v = '1.1.155';
+				g = 'Gakuran';
+				at = '2026-11-01 19:18';
+				lines = {
+					'修复手机端开关点不动';
+				};
+			};
+			{
+				v = '1.1.154';
+				g = 'Gakuran';
+				at = '2026-11-01 19:15';
+				lines = {
+					'手机端开关改成整行可点，行高放大';
+				};
+			};
+			{
+				v = '1.1.152';
+				g = 'Gakuran';
+				at = '2026-11-01 19:05';
+				lines = {
+					'修复加载提示条偶发卡住不消失';
 				};
 			};
 			{
@@ -16812,7 +16951,7 @@ do
 				g = 'Gakuran';
 				at = '2026-11-01 16:20';
 				lines = {
-					'修复弹反成功次数不统计的问题';
+					'修复弹反成功次数不统计';
 					'修复飞行复活后被传送回旧位置';
 					'修复匿名模式名字板仍显示原名';
 					'精简弹反设置，移除无用选项';
@@ -16823,7 +16962,7 @@ do
 				g = 'Gakuran';
 				at = '2026-11-01 15:40';
 				lines = {
-					'优化弹反判定数据，弹得更准';
+					'优化弹反判定数据';
 					'修正玩家与敌人的判定比例';
 				};
 			};
@@ -16871,10 +17010,10 @@ do
 			{
 				v = '1.1.100';
 				g = 'Gakuran';
-				at = '2026-11-01 14:20';
+				at = '2026-11-01 13:50';
 				lines = {
 					'移除连段保持';
-					'补全攻击动画表，修复部分招式无法弹反';
+					'补全攻击动画表';
 				};
 			};
 			{
@@ -16890,7 +17029,7 @@ do
 				g = 'Gakuran';
 				at = '2026-11-01 13:55';
 				lines = {
-					'修复手机端开关和按钮点不动的问题';
+					'修复手机端开关和按钮点不动';
 				};
 			};
 			{
@@ -16901,235 +17040,7 @@ do
 					'修复加载提示条一直挂在屏幕顶部不消失';
 				};
 			};
-			{
-				v = '1.1.95';
-				g = 'Gakuran';
-				at = '2026-11-01 13:05';
-				lines = {
-					'手机界面按内容自动调整高度，底部不再留空';
-				};
-			};
-			{
-				v = '1.1.94';
-				g = 'Gakuran';
-				at = '2026-11-01 12:30';
-				lines = {
-					'手机端不再显示按键页签';
-					'手机端聊天记录改用游戏自带聊天';
-				};
-			};
-			{
-				v = '1.1.93';
-				g = 'Gakuran';
-				at = '2026-11-01 11:50';
-				lines = {
-					'加载提示实时显示当前进度';
-				};
-			};
-			{
-				v = '1.1.91';
-				g = 'Gakuran';
-				at = '2026-11-01 10:35';
-				lines = {
-					'适配更多手机执行器，修复部分机型界面建不出来';
-				};
-			};
-			{
-				v = '1.1.87';
-				g = 'Gakuran';
-				at = '2026-11-01 02:10';
-				lines = {
-					'新增调试版，出问题时能看到真实报错行号';
-				};
-			};
-			{
-				v = '1.1.83';
-				g = 'Gakuran';
-				at = '2026-11-01 00:40';
-				lines = {
-					'修复部分功能模块加载顺序错误';
-				};
-			};
-			{
-				v = '1.1.81';
-				g = 'Gakuran';
-				at = '2026-11-01 01:50';
-				lines = {
-					'大幅度重写脚本，全面适配手机端';
-				};
-			};
-			{
-				v = '1.1.69';
-				g = 'Gakuran';
-				at = '2026-10-31 19:20';
-				lines = {
-					'修复手机端加载完成后不显示界面';
-				};
-			};
-			{
-				v = '1.1.68';
-				g = 'Gakuran';
-				at = '2026-10-31 19:00';
-				lines = {
-					'新增「更新」页，记录每个版本改了什么';
-				};
-			};
-			{
-				v = '1.1.59';
-				g = 'Gakuran';
-				at = '2026-10-31 18:05';
-				lines = {
-					'所有功能默认关闭，不再自动开启';
-				};
-			};
-			{
-				v = '1.1.58';
-				g = 'Gakuran';
-				at = '2026-10-31 17:55';
-				lines = {
-					'修复连击防不住（泰拳 M1 连段）';
-				};
-			};
-			{
-				v = '1.1.57';
-				g = 'Gakuran';
-				at = '2026-10-31 17:50';
-				lines = {
-					'更新自动弹反的自适应数据';
-				};
-			};
-			{
-				v = '1.1.56';
-				g = 'Gakuran';
-				at = '2026-10-31 17:35';
-				lines = {
-					'修复开启飞行后被传回原位';
-				};
-			};
-			{
-				v = '1.1.55';
-				g = 'Gakuran';
-				at = '2026-10-31 17:25';
-				lines = {
-					'匿名模式支持修改游戏内假名';
-					'飞行与旁路飞行合并';
-				};
-			};
-			{
-				v = '1.1.54';
-				g = 'Gakuran';
-				at = '2026-10-31 17:15';
-				lines = {
-					'修复旁路飞行偶发失效';
-				};
-			};
-			{
-				v = '1.1.52';
-				g = 'Gakuran';
-				at = '2026-10-31 17:05';
-				lines = {
-					'修复飞行悬停时往下掉';
-				};
-			};
-			{
-				v = '1.1.51';
-				g = 'Gakuran';
-				at = '2026-10-31 17:00';
-				lines = {
-					'飞行与旁路飞行合并成一个开关';
-				};
-			};
-			{
-				v = '1.1.49';
-				g = 'Gakuran';
-				at = '2026-10-31 16:45';
-				lines = {
-					'「无布娃娃」改为「永不被击倒」';
-				};
-			};
-			{
-				v = '1.1.48';
-				g = 'Gakuran';
-				at = '2026-10-31 16:30';
-				lines = {
-					'修复 HUD 血量偶尔显示为空';
-				};
-			};
-			{
-				v = '1.1.47';
-				g = 'Gakuran';
-				at = '2026-10-31 16:15';
-				lines = {
-					'新增跟随玩家（背后 / 天上 / 地下）';
-				};
-			};
-			{
-				v = '1.1.41';
-				g = 'Gakuran';
-				at = '2026-10-31 15:40';
-				lines = {
-					'修复部分特殊招式无法弹反';
-				};
-			};
-			{
-				v = '1.1.39';
-				g = 'Gakuran';
-				at = '2026-10-31 15:25';
-				lines = {
-					'匿名设置独立成组';
-				};
-			};
-			{
-				v = '1.1.37';
-				g = 'Gakuran';
-				at = '2026-10-31 15:05';
-				lines = {
-					'优化匿名模式性能';
-				};
-			};
-			{
-				v = '1.1.33';
-				g = 'Gakuran';
-				at = '2026-10-31 14:55';
-				lines = {
-					'新增匿名模式';
-				};
-			};
-			{
-				v = '1.1.31';
-				g = 'Gakuran';
-				at = '2026-10-31 14:45';
-				lines = {
-					'优化 debug 地点';
-				};
-			};
-			{
-				v = '1.1.26';
-				g = 'Gakuran';
-				at = '2026-10-31 14:15';
-				lines = {
-					'所有传送改为瞬间到达';
-				};
-			};
-			{
-				v = '1.1.25';
-				g = 'Gakuran';
-				at = '2026-10-31 14:05';
-				lines = {
-					'新增传送到玩家';
-					'血量条与真名拆分为独立开关';
-				};
-			};
-			{
-				v = '1.1.24';
-				g = 'Gakuran';
-				at = '2026-10-31 14:00';
-				lines = {
-					'重做提示框与按键显示';
-				};
-			};
 		};
-
 		
 		
 		local SHOW_LIMIT = 12;

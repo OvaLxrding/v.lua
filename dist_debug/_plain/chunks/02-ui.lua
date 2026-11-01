@@ -2951,8 +2951,10 @@ do
                 })
 
                 if warning.type == 'confirm' then
-                    local button = library:Create('TextLabel', {
+                    local button = library:Create('TextButton', {
                         ZIndex = 2,
+                        Active = true,
+                        AutoButtonColor = false,
                         Position = UDim2.new(0.5, -105, 0.5, 8),
                         Size = UDim2.new(0, 100, 0, 20),
                         BackgroundColor3 = Palette.Elevated,
@@ -2970,8 +2972,10 @@ do
                         ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                         Parent = button
                     })
-                    local button1 = library:Create('TextLabel', {
+                    local button1 = library:Create('TextButton', {
                         ZIndex = 2,
+                        Active = true,
+                        AutoButtonColor = false,
                         Position = UDim2.new(0.5, 5, 0.5, 8),
                         Size = UDim2.new(0, 100, 0, 20),
                         BackgroundColor3 = Palette.Elevated,
@@ -2989,10 +2993,18 @@ do
                         ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                         Parent = button1
                     })
+                    library.unloadMaid:GiveTask(button.Activated:Connect(function()
+                        answer = true;
+                    end));
+
                     library.unloadMaid:GiveTask(button.InputBegan:connect(function(input)
                         if isPrimaryInput(input) then
                             answer = true
                         end
+                    end));
+
+                    library.unloadMaid:GiveTask(button1.Activated:Connect(function()
+                        answer = false;
                     end));
 
                     library.unloadMaid:GiveTask(button1.InputBegan:connect(function(input)
@@ -3000,9 +3012,32 @@ do
                             answer = false
                         end
                     end));
+                    
+                    
+                    
+                    
+                    library.unloadMaid:GiveTask(warning.main.InputBegan:Connect(function(input)
+                        if (not isPrimaryInput(input)) then return end;
+
+                        local pos = input.Position;
+                        local function inside(obj)
+                            if (not obj or not obj.Visible) then return false end;
+
+                            local p, s = obj.AbsolutePosition, obj.AbsoluteSize;
+
+                            return pos.X >= p.X and pos.X <= p.X + s.X
+                                and pos.Y >= p.Y and pos.Y <= p.Y + s.Y;
+                        end;
+
+                        if (inside(button) or inside(button1)) then return end;
+
+                        answer = false;
+                    end));
                 else
-                    local button = library:Create('TextLabel', {
+                    local button = library:Create('TextButton', {
                         ZIndex = 2,
+                        Active = true,
+                        AutoButtonColor = false,
                         Position = UDim2.new(0.5, -50, 0.5, 8),
                         Size = UDim2.new(0, 100, 0, 20),
                         BackgroundColor3 = Palette.Second,
@@ -3013,6 +3048,10 @@ do
                         TextColor3 = Color3.new(1, 1, 1),
                         Parent = warning.main
                     })
+
+                    library.unloadMaid:GiveTask(button.Activated:Connect(function()
+                        answer = true;
+                    end));
 
                     library.unloadMaid:GiveTask(button.InputEnded:connect(function(input)
                         if isPrimaryInput(input) then
@@ -3044,7 +3083,14 @@ do
 
             warning.message.Size = UDim2.new(1, -40, 0, messageHeight)
 
-            repeat task.wait() until answer ~= nil;
+            
+            
+            
+            local deadline = os.clock() + 60;
+
+            repeat
+                task.wait();
+            until answer ~= nil or os.clock() > deadline;
             library.warning = nil;
 
             local answerCopy = answer;
@@ -4078,14 +4124,31 @@ settingsMain:AddBox({
 
         local btn;
         btn = configSection:AddButton({
-            text = isGlobalConfigOn and 'Switch To Local Config' or 'Switch to Global Config';
+            text = isGlobalConfigOn and '切换到本地配置' or '切换到全局配置';
 
             callback = function()
+                
+                
+                
+                
+                
+                
+                
+                
+                task.spawn(function()
+                local confirmed = library:ShowConfirm(
+                    '切换配置作用域后需要重新加载脚本才会生效。\n\n'
+                    .. '当前配置不会丢失，但下次启动会读取另一套配置。\n\n确定要切换吗？'
+                );
+
+                if (not confirmed) then return end;
+
                 isGlobalConfigOn = not isGlobalConfigOn;
                 writefile(globalConfFilePath, tostring(isGlobalConfigOn));
 
-                btn:SetText(isGlobalConfigOn and 'Switch To Local Config' or 'Switch to Global Config');
-                library:ShowMessage('Note: Switching from Local to Global requires script relaunch.');
+                btn:SetText(isGlobalConfigOn and '切换到本地配置' or '切换到全局配置');
+                library:ShowMessage('已切换配置作用域，重新加载脚本后生效。');
+                end);
             end
         });
 
