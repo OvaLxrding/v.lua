@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 17:30:44
+    生成时间: 2026-11-01 17:34:27
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -16060,6 +16060,12 @@ do
 			followConn = nil;
 		end;
 
+		
+		local character = LocalPlayer.Character;
+		local hrp = character and character:FindFirstChild('HumanoidRootPart');
+
+		unbindRepRoot(boundRoot or hrp);
+		boundRoot = nil;
 		restoreRotation();
 
 		boundTo = nil;
@@ -16192,13 +16198,18 @@ do
 			if (humanoid) then humanoid.AutoRotate = false end;
 		end;
 
+		local now = os.clock();
 		
-		
-		
-		
-		
-		
-		
+		if (boundRoot ~= myHrp or boundTo ~= theirHrp or not bindRetryAt or now >= bindRetryAt) then
+			if (boundRoot and boundRoot ~= myHrp) then unbindRepRoot(boundRoot) end;
+			local ok, err = bindRepRoot(myHrp, theirHrp);
+			if (not ok) then
+				stop('PhysicsRepRootRef 绑定失败：' .. tostring(err));
+				return;
+			end;
+			boundRoot, boundTo = myHrp, theirHrp;
+			bindRetryAt = now + 0.1;
+		end;
 
 		local mode = library.flags.followMode or '背后';
 		local distance = tonumber(library.flags.followDistance) or 7;
@@ -16238,8 +16249,8 @@ do
 			return;
 		end;
 
-		if (target == LocalPlayer) then
-			stop('请选择其他玩家');
+		if (target == LocalPlayer or not hasHiddenApi()) then
+			stop('请选择其他玩家，并使用支持 sethiddenproperty / InstanceHandle 的执行器');
 			return;
 		end;
 
@@ -16294,7 +16305,7 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.142';
+				v = '1.1.143';
 				g = 'Gakuran';
 				at = '2026-11-01 17:40';
 				lines = {
