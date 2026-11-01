@@ -642,10 +642,16 @@ do
             table.insert(library.theme, tickbox)
         end
 
-        option.interest = library:Create('Frame', {
+        
+        
+        
+        
+        option.interest = library:Create('TextButton', {
             Position = UDim2.new(0, 0, 0, 0),
             Size = UDim2.new(1, 0, 0, 20),
             BackgroundTransparency = 1,
+            AutoButtonColor = false,
+            Text = '',
             Parent = option.main
         })
 
@@ -661,10 +667,13 @@ do
             Parent = option.interest
         })
 
+        
+        library.unloadMaid:GiveTask(option.interest.Activated:connect(function()
+            option:SetState(not option.state)
+        end))
+
+        
         library.unloadMaid:GiveTask(option.interest.InputBegan:connect(function(input)
-            if isPrimaryInput(input) then
-                option:SetState(not option.state)
-            end
             if input.UserInputType.Name == 'MouseMovement' then
                 if not library.warning and not library.slider then
                     if option.style then
@@ -736,7 +745,8 @@ do
             Parent = parent
         })
 
-        option.title = library:Create('TextLabel', {
+        
+        option.title = library:Create('TextButton', {
             AnchorPoint = Vector2.new(0.5, 1),
             Position = UDim2.new(0.5, 0, 1, -5),
             Size = UDim2.new(1, -12, 0, 18),
@@ -746,6 +756,7 @@ do
             TextColor3 = Color3.new(1, 1, 1),
             TextSize = 15,
             Font = Enum.Font.Gotham,
+            AutoButtonColor = false,
             Parent = option.main
         })
 
@@ -784,16 +795,14 @@ do
             Parent = option.title
         })
 
-        library.unloadMaid:GiveTask(option.title.InputBegan:connect(function(input)
-            if isPrimaryInput(input) then
-                option.callback()
-                if library then
-                    library.flags[option.flag] = true
-                end
-                if option.tip then
-                    library.tooltip.Text = option.tip;
-                end
+        library.unloadMaid:GiveTask(option.title.Activated:connect(function()
+            option.callback()
+            if library then
+                library.flags[option.flag] = true
             end
+        end))
+
+        library.unloadMaid:GiveTask(option.title.InputBegan:connect(function(input)
             if input.UserInputType.Name == 'MouseMovement' then
                 if not library.warning and not library.slider then
                     option.title.BorderColor3 = library.flags.menuAccentColor;

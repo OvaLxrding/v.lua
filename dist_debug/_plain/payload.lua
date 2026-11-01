@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 13:14:51
+    生成时间: 2026-11-01 13:45:32
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -751,10 +751,16 @@ do
             table.insert(library.theme, tickbox)
         end
 
-        option.interest = library:Create('Frame', {
+        
+        
+        
+        
+        option.interest = library:Create('TextButton', {
             Position = UDim2.new(0, 0, 0, 0),
             Size = UDim2.new(1, 0, 0, 20),
             BackgroundTransparency = 1,
+            AutoButtonColor = false,
+            Text = '',
             Parent = option.main
         })
 
@@ -770,10 +776,13 @@ do
             Parent = option.interest
         })
 
+        
+        library.unloadMaid:GiveTask(option.interest.Activated:connect(function()
+            option:SetState(not option.state)
+        end))
+
+        
         library.unloadMaid:GiveTask(option.interest.InputBegan:connect(function(input)
-            if isPrimaryInput(input) then
-                option:SetState(not option.state)
-            end
             if input.UserInputType.Name == 'MouseMovement' then
                 if not library.warning and not library.slider then
                     if option.style then
@@ -845,7 +854,8 @@ do
             Parent = parent
         })
 
-        option.title = library:Create('TextLabel', {
+        
+        option.title = library:Create('TextButton', {
             AnchorPoint = Vector2.new(0.5, 1),
             Position = UDim2.new(0.5, 0, 1, -5),
             Size = UDim2.new(1, -12, 0, 18),
@@ -855,6 +865,7 @@ do
             TextColor3 = Color3.new(1, 1, 1),
             TextSize = 15,
             Font = Enum.Font.Gotham,
+            AutoButtonColor = false,
             Parent = option.main
         })
 
@@ -893,16 +904,14 @@ do
             Parent = option.title
         })
 
-        library.unloadMaid:GiveTask(option.title.InputBegan:connect(function(input)
-            if isPrimaryInput(input) then
-                option.callback()
-                if library then
-                    library.flags[option.flag] = true
-                end
-                if option.tip then
-                    library.tooltip.Text = option.tip;
-                end
+        library.unloadMaid:GiveTask(option.title.Activated:connect(function()
+            option.callback()
+            if library then
+                library.flags[option.flag] = true
             end
+        end))
+
+        library.unloadMaid:GiveTask(option.title.InputBegan:connect(function(input)
             if input.UserInputType.Name == 'MouseMovement' then
                 if not library.warning and not library.slider then
                     option.title.BorderColor3 = library.flags.menuAccentColor;
@@ -15955,6 +15964,71 @@ do
 		local section = column:AddSection('版本更新');
 
 		local UPDATES = {
+			{
+				v = '1.1.97';
+				g = 'Gakuran';
+				at = '2026-11-01 13:55';
+				lines = {
+					'修复手机端开关和按钮点不动的问题';
+				};
+			};
+			{
+				v = '1.1.96';
+				g = 'Gakuran';
+				at = '2026-11-01 13:40';
+				lines = {
+					'修复加载提示条一直挂在屏幕顶部不消失';
+				};
+			};
+			{
+				v = '1.1.95';
+				g = 'Gakuran';
+				at = '2026-11-01 13:05';
+				lines = {
+					'手机界面按内容自动调整高度，底部不再留空';
+				};
+			};
+			{
+				v = '1.1.94';
+				g = 'Gakuran';
+				at = '2026-11-01 12:30';
+				lines = {
+					'手机端不再显示按键页签';
+					'手机端聊天记录改用游戏自带聊天';
+				};
+			};
+			{
+				v = '1.1.93';
+				g = 'Gakuran';
+				at = '2026-11-01 11:50';
+				lines = {
+					'加载提示实时显示当前进度';
+				};
+			};
+			{
+				v = '1.1.91';
+				g = 'Gakuran';
+				at = '2026-11-01 10:35';
+				lines = {
+					'适配更多手机执行器，修复部分机型界面建不出来';
+				};
+			};
+			{
+				v = '1.1.87';
+				g = 'Gakuran';
+				at = '2026-11-01 02:10';
+				lines = {
+					'新增调试版，出问题时能看到真实报错行号';
+				};
+			};
+			{
+				v = '1.1.83';
+				g = 'Gakuran';
+				at = '2026-11-01 00:40';
+				lines = {
+					'修复部分功能模块加载顺序错误';
+				};
+			};
 			{
 				v = '1.1.81';
 				g = 'Gakuran';
