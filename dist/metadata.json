@@ -1,9 +1,9 @@
 {
-  "version": "1.1.86",
-  "builtAt": "2026-11-01 03:16:37",
+  "version": "1.1.87",
+  "builtAt": "2026-11-01 09:27:53",
   "sourceBytes": 583169,
-  "payloadBytes": 786872,
-  "sha256": "eb26cf927688f6e99670f29472984257ea1e21b43e256f5d029630e71c82c888",
+  "payloadBytes": 786874,
+  "sha256": "72022a7d0bee38e05364889842a0ade75d8d36c8684a252c52fdd18efd7a1fc1",
   "encrypted": true,
   "alg": "chacha20",
   "protect": "array+strings+wrap+chacha20",
