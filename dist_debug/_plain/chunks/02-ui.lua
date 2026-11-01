@@ -547,6 +547,45 @@ do
         option.Text = option.text
     end
 
+    
+    
+    
+    
+    
+    
+    local function bindClick(button, handler)
+        local lastFire = 0
+
+        local function fire()
+            local now = os.clock()
+
+            if (now - lastFire) < 0.25 then return end
+
+            lastFire = now
+            handler()
+        end
+
+        pcall(function()
+            library.unloadMaid:GiveTask(button.Activated:Connect(fire))
+        end)
+
+        pcall(function()
+            library.unloadMaid:GiveTask(button.MouseButton1Click:Connect(fire))
+        end)
+
+        pcall(function()
+            library.unloadMaid:GiveTask(button.InputBegan:Connect(function(input)
+                local kind = input.UserInputType
+
+                if (kind == Enum.UserInputType.Touch
+                    or kind == Enum.UserInputType.MouseButton1
+                    or kind == Enum.UserInputType.MouseButton2) then
+                    fire()
+                end
+            end))
+        end)
+    end
+
     local function createToggle(option, parent)
         option.hasInit = true
         option.onStateChanged = Signal.new();
@@ -668,9 +707,9 @@ do
         })
 
         
-        library.unloadMaid:GiveTask(option.interest.Activated:connect(function()
+        bindClick(option.interest, function()
             option:SetState(not option.state)
-        end))
+        end)
 
         
         library.unloadMaid:GiveTask(option.interest.InputBegan:connect(function(input)
@@ -795,12 +834,13 @@ do
             Parent = option.title
         })
 
-        library.unloadMaid:GiveTask(option.title.Activated:connect(function()
+        bindClick(option.title, function()
             option.callback()
+
             if library then
                 library.flags[option.flag] = true
             end
-        end))
+        end)
 
         library.unloadMaid:GiveTask(option.title.InputBegan:connect(function(input)
             if input.UserInputType.Name == 'MouseMovement' then

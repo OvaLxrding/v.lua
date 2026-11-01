@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 17:34:27
+    生成时间: 2026-11-01 17:37:25
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -656,6 +656,45 @@ do
         option.Text = option.text
     end
 
+    
+    
+    
+    
+    
+    
+    local function bindClick(button, handler)
+        local lastFire = 0
+
+        local function fire()
+            local now = os.clock()
+
+            if (now - lastFire) < 0.25 then return end
+
+            lastFire = now
+            handler()
+        end
+
+        pcall(function()
+            library.unloadMaid:GiveTask(button.Activated:Connect(fire))
+        end)
+
+        pcall(function()
+            library.unloadMaid:GiveTask(button.MouseButton1Click:Connect(fire))
+        end)
+
+        pcall(function()
+            library.unloadMaid:GiveTask(button.InputBegan:Connect(function(input)
+                local kind = input.UserInputType
+
+                if (kind == Enum.UserInputType.Touch
+                    or kind == Enum.UserInputType.MouseButton1
+                    or kind == Enum.UserInputType.MouseButton2) then
+                    fire()
+                end
+            end))
+        end)
+    end
+
     local function createToggle(option, parent)
         option.hasInit = true
         option.onStateChanged = Signal.new();
@@ -777,9 +816,9 @@ do
         })
 
         
-        library.unloadMaid:GiveTask(option.interest.Activated:connect(function()
+        bindClick(option.interest, function()
             option:SetState(not option.state)
-        end))
+        end)
 
         
         library.unloadMaid:GiveTask(option.interest.InputBegan:connect(function(input)
@@ -904,12 +943,13 @@ do
             Parent = option.title
         })
 
-        library.unloadMaid:GiveTask(option.title.Activated:connect(function()
+        bindClick(option.title, function()
             option.callback()
+
             if library then
                 library.flags[option.flag] = true
             end
-        end))
+        end)
 
         library.unloadMaid:GiveTask(option.title.InputBegan:connect(function(input)
             if input.UserInputType.Name == 'MouseMovement' then
@@ -16305,10 +16345,11 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.143';
+				v = '1.1.144';
 				g = 'Gakuran';
 				at = '2026-11-01 17:40';
 				lines = {
+					'修复手机端开关和按钮点不动';
 					'弹反手感优化，格挡判定更准';
 					'吸附功能修复，不再被拉回原位';
 					'修复弹反成功次数不统计的问题';
