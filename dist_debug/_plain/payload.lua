@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 17:49:30
+    生成时间: 2026-11-01 17:54:03
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -16195,7 +16195,23 @@ do
 	
 	
 	
+	local DEADZONE = 1.5;   
+
 	local function place(myHrp, targetCF)
+		local delta = targetCF.Position - myHrp.Position;
+		local distance = delta.Magnitude;
+
+		
+		
+		
+		if (distance <= DEADZONE) then
+			pcall(function()
+				myHrp.AssemblyLinearVelocity = Vector3.zero;
+			end);
+
+			return true;
+		end;
+
 		return pcall(function()
 			myHrp.CFrame = targetCF;
 			myHrp.AssemblyLinearVelocity = Vector3.zero;
@@ -16424,10 +16440,11 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.145';
+				v = '1.1.146';
 				g = 'Gakuran';
 				at = '2026-11-01 17:40';
 				lines = {
+					'吸附到位后保持静止，不再一直播移动动画';
 					'吸附时角色贴地站立，不再悬空';
 					'修复手机端开关和按钮点不动';
 					'弹反手感优化，格挡判定更准';
