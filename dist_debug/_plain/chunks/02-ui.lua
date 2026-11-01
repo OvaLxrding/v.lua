@@ -683,6 +683,9 @@ do
             local dy = input.Position.Y - start.y;
 
             
+            if (os.clock() < (library.suppressTapUntil or 0)) then return end;
+
+            
             if (math.sqrt(dx * dx + dy * dy) > TAP_MOVE_TOLERANCE) then return end;
 
             if (os.clock() - start.t > TAP_MAX_SECONDS) then return end;
@@ -691,8 +694,27 @@ do
             local best, bestArea = nil, nil;
             local px, py = input.Position.X, input.Position.Y;
 
+            
+            
+            
+            
+            
+            local function isReallyVisible(object)
+                local current = object;
+
+                while (current and current ~= library.base) do
+                    if (current:IsA('GuiObject') and current.Visible == false) then
+                        return false;
+                    end;
+
+                    current = current.Parent;
+                end;
+
+                return true;
+            end;
+
             for object, fire in next, library.tappables do
-                if (object and object.Parent and object.Visible) then
+                if (object and object.Parent and object.Visible and isReallyVisible(object)) then
                     local pos = object.AbsolutePosition;
                     local size = object.AbsoluteSize;
 
@@ -3553,6 +3575,14 @@ do
             clearFoundResult();
             searchBox.Visible = false;
             searchBox.Text = '';
+
+            
+            
+            
+            
+            
+            
+            library.suppressTapUntil = os.clock() + 0.25;
 
             if self.currentTab then
                 self.currentTab.button.TextColor3 = Color3.fromRGB(255, 255, 255)
