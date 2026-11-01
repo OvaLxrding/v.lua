@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 18:20:55
+    生成时间: 2026-11-01 18:46:03
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -3492,6 +3492,15 @@ do
         
         pcall(function()
             getgenv().vairUiReady = true;
+
+    
+    
+    
+    pcall(function()
+        if (type(getgenv().vairFinishHint) == 'function') then
+            getgenv().vairFinishHint();
+        end;
+    end);
             getgenv().vairUiReadyAt = os.clock();
         end);
 
@@ -16444,7 +16453,7 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.151';
+				v = '1.1.152';
 				g = 'Gakuran';
 				at = '2026-11-01 17:40';
 				lines = {

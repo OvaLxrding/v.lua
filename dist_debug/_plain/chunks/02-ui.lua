@@ -3383,6 +3383,15 @@ do
         
         pcall(function()
             getgenv().vairUiReady = true;
+
+    
+    
+    
+    pcall(function()
+        if (type(getgenv().vairFinishHint) == 'function') then
+            getgenv().vairFinishHint();
+        end;
+    end);
             getgenv().vairUiReadyAt = os.clock();
         end);
 
