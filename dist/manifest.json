@@ -1,5 +1,5 @@
 {
-  "version": "1.1.89",
+  "version": "1.1.90",
   "encrypted": true,
   "alg": "chacha20",
   "counter": 1,
@@ -18,11 +18,11 @@
     {
       "name": "02-ui.lua",
       "file": "chunks/02-ui.lua",
-      "bytes": 506297,
-      "plainBytes": 144514,
-      "obfBytes": 379720,
-      "checksum": 1682180188,
-      "sha256": "da43b3b07f62af042a29e5b9459bae882e8a05a3c2e37839926393da375cba15",
+      "bytes": 512557,
+      "plainBytes": 144637,
+      "obfBytes": 384417,
+      "checksum": 1252016740,
+      "sha256": "a9a0c31531934888a43c50b47ef47bcb55f849f151b3e34a954d477635de397a",
       "nonce": "krynEy12hCeuPO+p",
       "runtime": false
     },
@@ -49,6 +49,6 @@
       "runtime": true
     }
   ],
-  "totalBytes": 1886220,
+  "totalBytes": 1892480,
   "protect": "array+strings+wrap+chacha20"
 }
