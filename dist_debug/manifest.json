@@ -1,5 +1,5 @@
 {
-  "version": "1.1.89",
+  "version": "1.1.90",
   "encrypted": true,
   "alg": "chacha20",
   "counter": 1,
@@ -10,19 +10,19 @@
       "bytes": 205525,
       "plainBytes": 154135,
       "obfBytes": 154142,
-      "checksum": 2848689746,
-      "sha256": "f21256b7b0bcba781304b9e6800c33ac41aedb90f120eac81f7a498b0c620f93",
+      "checksum": 700212840,
+      "sha256": "5fb2006e4a51bc3008b402a9cb0030368178aef72f3cbd1962391a4327656074",
       "nonce": "340rwxPxJTTziKoL",
       "runtime": false
     },
     {
       "name": "02-ui.lua",
       "file": "chunks/02-ui.lua",
-      "bytes": 192697,
-      "plainBytes": 144514,
-      "obfBytes": 144521,
-      "checksum": 4048221294,
-      "sha256": "cc703f1dc5d5605230bee72a95e180e582c136609cedfad94268b0546df839e2",
+      "bytes": 192861,
+      "plainBytes": 144637,
+      "obfBytes": 144644,
+      "checksum": 47386548,
+      "sha256": "f27b092bcd7cef2d58575afbc793dd85da5a564e67d04c75165e04ad5fbdef12",
       "nonce": "krynEy12hCeuPO+p",
       "runtime": false
     },
@@ -49,6 +49,6 @@
       "runtime": true
     }
   ],
-  "totalBytes": 1280928,
+  "totalBytes": 1281092,
   "protect": "mixed+chacha20"
 }

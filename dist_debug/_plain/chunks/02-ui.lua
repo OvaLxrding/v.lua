@@ -256,8 +256,20 @@ do
         properties = properties or {}
         if not class then return end
         local a = class == 'Square' or class == 'Line' or class == 'Text' or class == 'Quad' or class == 'Circle' or class == 'Triangle'
-        local t = a and Drawing or Instance
-        local inst = t.new(class)
+
+        
+        
+        
+        
+        
+        
+        local inst;
+
+        if (a) then
+            inst = Drawing.new(class);
+        else
+            inst = Instance.new(class);
+        end;
         for property, value in next, properties do
             inst[property] = value
         end

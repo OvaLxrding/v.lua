@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 10:10:19
+    生成时间: 2026-11-01 10:23:03
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -334,8 +334,20 @@ do
         properties = properties or {}
         if not class then return end
         local a = class == 'Square' or class == 'Line' or class == 'Text' or class == 'Quad' or class == 'Circle' or class == 'Triangle'
-        local t = a and Drawing or Instance
-        local inst = t.new(class)
+
+        
+        
+        
+        
+        
+        
+        local inst;
+
+        if (a) then
+            inst = Drawing.new(class);
+        else
+            inst = Instance.new(class);
+        end;
         for property, value in next, properties do
             inst[property] = value
         end
