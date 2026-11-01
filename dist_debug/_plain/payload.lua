@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 19:08:42
+    生成时间: 2026-11-01 19:17:55
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -763,6 +763,31 @@ do
             end;
         end));
     end;
+
+    
+    
+    
+    local TOUCH_UI = false;
+
+    pcall(function()
+        local forced = getgenv().__vairForceTouchUI;
+
+        if (forced ~= nil) then
+            TOUCH_UI = (forced == true);
+            return;
+        end;
+
+        local UIS = game:GetService('UserInputService');
+
+        
+        
+        TOUCH_UI = (UIS.TouchEnabled == true) or (UIS.AccelerometerEnabled == true);
+    end);
+
+    local ROW_H = TOUCH_UI and 46 or 20;    
+    local BOX = TOUCH_UI and 22 or 12;      
+    local BOX_X = TOUCH_UI and 10 or 6;     
+    local TEXT_X = BOX_X + BOX + (TOUCH_UI and 12 or 6);  
 
     local function createToggle(option, parent)
         option.hasInit = true
@@ -16534,7 +16559,7 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.155';
+				v = '1.1.156';
 				g = 'Gakuran';
 				at = '2026-11-01 19:10';
 				lines = {
