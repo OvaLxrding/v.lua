@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 21:04:43
+    生成时间: 2026-11-01 21:20:16
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -759,6 +759,78 @@ do
     end;
 
     
+    
+    
+    
+    local function isReallyVisible(object)
+        local current = object;
+
+        while (current) do
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            if (current:IsA('GuiObject') and current.Visible == false) then
+                return false;
+            end;
+
+            if (current:IsA('ScreenGui') and current.Enabled == false) then
+                return false;
+            end;
+
+            if (current == library.base) then
+                return true;
+            end;
+
+            current = current.Parent;
+        end;
+
+        return false;
+    end;
+
+    
+    library.hitTest = function(x, y)
+        local found, foundArea = nil, nil;
+
+        for object in next, library.tappables do
+            if (object and object.Parent and object.Visible and isReallyVisible(object)) then
+                local pos, size = object.AbsolutePosition, object.AbsoluteSize;
+                local area = size.X * size.Y;
+
+                if (area > 0
+                    and x >= pos.X and x <= pos.X + size.X
+                    and y >= pos.Y and y <= pos.Y + size.Y) then
+                    if (not foundArea or area < foundArea) then
+                        found, foundArea = object, area;
+                    end;
+                end;
+            end;
+        end;
+
+        return found;
+    end;
+
+    
+    getgenv().__vairHitTest = function(x, y)
+        local object = library.hitTest(x, y);
+
+        if (not object) then return nil end;
+
+        for flag, option in next, library.options do
+            if (option.interest == object or option.title == object) then
+                return flag;
+            end;
+        end;
+
+        return '__unknown__';
+    end;
+
     if (not library.tapDispatcherInstalled) then
         library.tapDispatcherInstalled = true;
 
@@ -792,6 +864,16 @@ do
             local dy = input.Position.Y - start.y;
 
             
+            
+            
+            
+            
+            
+            
+            if (library.open == false) then return end;
+            if (library.base and library.base.Enabled == false) then return end;
+
+            
             if (os.clock() < (library.suppressTapUntil or 0)) then return end;
 
             
@@ -799,47 +881,12 @@ do
 
             if (os.clock() - start.t > TAP_MAX_SECONDS) then return end;
 
-            
-            local best, bestArea = nil, nil;
             local px, py = input.Position.X, input.Position.Y;
 
-            
-            
-            
-            
-            
-            local function isReallyVisible(object)
-                local current = object;
+            local object = library.hitTest(px, py);
 
-                while (current and current ~= library.base) do
-                    if (current:IsA('GuiObject') and current.Visible == false) then
-                        return false;
-                    end;
-
-                    current = current.Parent;
-                end;
-
-                return true;
-            end;
-
-            for object, fire in next, library.tappables do
-                if (object and object.Parent and object.Visible and isReallyVisible(object)) then
-                    local pos = object.AbsolutePosition;
-                    local size = object.AbsoluteSize;
-
-                    if (px >= pos.X and px <= pos.X + size.X
-                        and py >= pos.Y and py <= pos.Y + size.Y) then
-                        local area = size.X * size.Y;
-
-                        if (not bestArea or area < bestArea) then
-                            best, bestArea = fire, area;
-                        end;
-                    end;
-                end;
-            end;
-
-            if (best) then
-                pcall(best);
+            if (object and library.tappables[object]) then
+                pcall(library.tappables[object]);
             end;
         end));
     end;
@@ -16838,6 +16885,38 @@ do
 		local section = column:AddSection('版本更新');
 
 		local UPDATES = {
+			{
+				v = '1.1.170';
+				g = 'Gakuran';
+				at = '2026-11-01 22:50';
+				lines = {
+					'界面收起后彻底停止点击响应';
+				};
+			};
+			{
+				v = '1.1.169';
+				g = 'Gakuran';
+				at = '2026-11-01 22:35';
+				lines = {
+					'修复点击命中其它页签的控件';
+				};
+			};
+			{
+				v = '1.1.168';
+				g = 'Gakuran';
+				at = '2026-11-01 22:20';
+				lines = {
+					'界面收起后原位置不再响应点击';
+				};
+			};
+			{
+				v = '1.1.167';
+				g = 'Gakuran';
+				at = '2026-11-01 22:00';
+				lines = {
+					'修复界面收起后原位置仍可点';
+				};
+			};
 			{
 				v = '1.1.166';
 				g = 'Gakuran';
