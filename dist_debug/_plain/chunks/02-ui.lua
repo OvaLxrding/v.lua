@@ -3328,6 +3328,15 @@ do
             self.open = false;
         end;
 
+        
+        
+        
+        
+        pcall(function()
+            getgenv().vairUiReady = true;
+            getgenv().vairUiReadyAt = os.clock();
+        end);
+
         library.OnLoad:Fire();
         library.OnLoad:Destroy();
 

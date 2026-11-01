@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 10:36:22
+    生成时间: 2026-11-01 13:14:51
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -3436,6 +3436,15 @@ do
         else
             self.open = false;
         end;
+
+        
+        
+        
+        
+        pcall(function()
+            getgenv().vairUiReady = true;
+            getgenv().vairUiReadyAt = os.clock();
+        end);
 
         library.OnLoad:Fire();
         library.OnLoad:Destroy();
@@ -14686,11 +14695,59 @@ do
 	
 	
 	
+	
 	local chatLoggerInstance;
 	local chatLoggerEnabled = false;
 
+	
+	
+	
+	
+	local function setNativeChatVisible(on)
+		
+		
+		
+		local okChat, applied = pcall(function()
+			local TextChatService = game:GetService('TextChatService');
+			local config = TextChatService and TextChatService:FindFirstChild('ChatWindowConfiguration');
+
+			if (config) then
+				config.Enabled = on and true or false;
+				return true;
+			end;
+
+			return false;
+		end);
+
+		if (okChat and applied) then
+			return true;
+		end;
+
+		local okCore = pcall(function()
+			game:GetService('StarterGui'):SetCoreGuiEnabled(Enum.CoreGuiType.Chat, on and true or false);
+		end);
+
+		return okCore;
+	end;
+
 	function functions.chatLogger(toggle)
 		chatLoggerEnabled = toggle and true or false;
+
+		
+		local MobileUI = sharedRequire('../../utils/MobileUI.lua');
+
+		if (type(MobileUI) == 'table' and type(MobileUI.isTouch) == 'function' and MobileUI.isTouch()) then
+			if (setNativeChatVisible(chatLoggerEnabled)) then
+				
+				if (chatLoggerInstance) then
+					pcall(function() chatLoggerInstance:SetVisible(false) end);
+				end;
+
+				return;
+			end;
+
+			
+		end;
 
 		if (not chatLoggerInstance) then
 			local okNew, inst = pcall(TextLogger.new, {
@@ -15598,28 +15655,61 @@ end;
 
 
 
-do 
-	local ATT_NAME = 'VairFollowAtt';
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	local followHandle = nil;
-	local followPlayer = nil;
+
+
+
+
+
+do 
+	local followPlayer = nil;      
 	local followConn = nil;
 	local followToken = 0;
-	local alignPos, alignOrient, alignAtt;
-	local spawned = {};
-	local prevNoclip = nil;        
-	local prevAutoRotate = nil;    
+	local boundTo = nil;           
+	local bindRetryAt = nil;       
+	local hiddenApiOk = nil;
+	local boundRoot = nil;
+	local controlledHumanoid = nil;
+	local prevNoclip = nil;
+	local prevAutoRotate = nil;
+
+	local function restoreRotation()
+		if (controlledHumanoid and prevAutoRotate ~= nil) then
+			pcall(function() controlledHumanoid.AutoRotate = prevAutoRotate end);
+		end;
+		controlledHumanoid = nil;
+	end;
+
+	
+	local function hasHiddenApi()
+		if (hiddenApiOk ~= nil) then return hiddenApiOk end;
+
+		hiddenApiOk = type(sethiddenproperty) == 'function'
+			and type(InstanceHandle) == 'table'
+			and type(InstanceHandle.new) == 'function';
+
+		return hiddenApiOk;
+	end;
+
+	
+	local function bindRepRoot(hrp, refPart)
+		if (not hrp or not refPart or not hasHiddenApi()) then return false end;
+
+		local ok, err = pcall(function()
+			sethiddenproperty(hrp, 'PhysicsRepRootRef', InstanceHandle.new(refPart));
+		end);
+		if (not ok) then return false, err end;
+		return true;
+	end;
+
+	local function unbindRepRoot(hrp)
+		if (hrp and hasHiddenApi()) then
+			pcall(sethiddenproperty, hrp, 'PhysicsRepRootRef', nil);
+		end;
+	end;
 
 	local function detach()
+		maid.followPlayer = nil;
 		if (followConn) then
 			pcall(function()
 				followConn:Disconnect();
@@ -15628,15 +15718,16 @@ do
 			followConn = nil;
 		end;
 
-		for _, instance in next, spawned do
-			pcall(function()
-				instance:Destroy();
-			end);
-		end;
+		
+		local character = LocalPlayer.Character;
+		local hrp = character and character:FindFirstChild('HumanoidRootPart');
 
-		table.clear(spawned);
+		unbindRepRoot(boundRoot or hrp);
+		boundRoot = nil;
+		restoreRotation();
 
-		alignPos, alignOrient, alignAtt = nil, nil, nil;
+		boundTo = nil;
+		bindRetryAt = nil;
 	end;
 
 	local function setNoclip(on)
@@ -15645,51 +15736,26 @@ do
 		end;
 	end;
 
-	local function attach(character)
-		detach();
+	
+	
+	local function place(myHrp, targetCF)
+		local seatGetter = getgenv().__gakuranSeatPart;
 
-		local hrp = character and character:FindFirstChild('HumanoidRootPart');
+		if (type(seatGetter) == 'function') then
+			local okSeat, seatPart = pcall(seatGetter);
 
-		if (not hrp) then return false end;
-
-		
-		
-		local humanoid = character:FindFirstChildOfClass('Humanoid');
-
-		if (humanoid) then
-			prevAutoRotate = humanoid.AutoRotate;
-
-			pcall(function()
-				humanoid.AutoRotate = false;
-			end);
+			if (okSeat and typeof(seatPart) == 'Instance' and seatPart.Parent) then
+				return pcall(function()
+					seatPart.CFrame = targetCF;
+				end);
+			end;
 		end;
 
-		alignAtt = Instance.new('Attachment');
-		alignAtt.Name = ATT_NAME;
-		alignAtt.Parent = hrp;
-
-		alignPos = Instance.new('AlignPosition');
-		alignPos.Name = 'VairFollowPos';
-		alignPos.Attachment0 = alignAtt;
-		alignPos.Mode = Enum.PositionAlignmentMode.OneAttachment;
-		alignPos.MaxForce = 1e6;
-		alignPos.Responsiveness = 200;
-		alignPos.ApplyAtCenterOfMass = false;
-		alignPos.Parent = hrp;
-
-		
-		
-		alignOrient = Instance.new('AlignOrientation');
-		alignOrient.Name = 'VairFollowOrient';
-		alignOrient.Attachment0 = alignAtt;
-		alignOrient.Mode = Enum.OrientationAlignmentMode.OneAttachment;
-		alignOrient.MaxTorque = 1e6;
-		alignOrient.Responsiveness = 200;
-		alignOrient.Parent = hrp;
-
-		spawned = { alignAtt, alignPos, alignOrient };
-
-		return true;
+		return pcall(function()
+			myHrp.CFrame = targetCF;
+			myHrp.AssemblyLinearVelocity = Vector3.zero;
+			myHrp.AssemblyAngularVelocity = Vector3.zero;
+		end);
 	end;
 
 	
@@ -15746,7 +15812,6 @@ do
 
 	local function stop(reason)
 		followToken += 1;
-		followHandle = nil;
 		followPlayer = nil;
 
 		detach();
@@ -15759,15 +15824,6 @@ do
 		prevNoclip = nil;
 
 		
-		local character = LocalPlayer.Character;
-		local humanoid = character and character:FindFirstChildOfClass('Humanoid');
-
-		if (humanoid and prevAutoRotate ~= nil) then
-			pcall(function()
-				humanoid.AutoRotate = prevAutoRotate;
-			end);
-		end;
-
 		prevAutoRotate = nil;
 
 		if (library.flags.followPlayer) then
@@ -15780,82 +15836,45 @@ do
 	end;
 
 	local function tick()
-		local myCharacter = LocalPlayer.Character;
-		local myHrp = myCharacter and myCharacter:FindFirstChild('HumanoidRootPart');
-
-		if (not (myHrp and alignPos and alignOrient)) then
-			stop();
-
-			return;
-		end;
-
-		
 		if (not followPlayer or not followPlayer.Parent) then
 			stop('目标已经离开服务器，停止跟随');
-
 			return;
 		end;
 
+		local myCharacter = LocalPlayer.Character;
+		local myHrp = myCharacter and myCharacter:FindFirstChild('HumanoidRootPart');
 		local theirCharacter = followPlayer.Character;
 		local theirHrp = theirCharacter and theirCharacter:FindFirstChild('HumanoidRootPart');
 
 		
-		if (not theirHrp) then return end;
+		if (not myHrp or not theirHrp) then return end;
 
+		local humanoid = myCharacter:FindFirstChildOfClass('Humanoid');
+		if (humanoid ~= controlledHumanoid) then
+			restoreRotation();
+			controlledHumanoid = humanoid;
+			prevAutoRotate = humanoid and humanoid.AutoRotate;
+			if (humanoid) then humanoid.AutoRotate = false end;
+		end;
+
+		local now = os.clock();
 		
-		local handled = followHandle and followHandle:Get();
-
-		if (not handled or handled.Parent == nil or handled ~= theirHrp) then
-			followHandle = InstanceHandle.new(theirHrp);
-
-			if (not attach(myCharacter)) then
-				stop();
-
+		if (boundRoot ~= myHrp or boundTo ~= theirHrp or not bindRetryAt or now >= bindRetryAt) then
+			if (boundRoot and boundRoot ~= myHrp) then unbindRepRoot(boundRoot) end;
+			local ok, err = bindRepRoot(myHrp, theirHrp);
+			if (not ok) then
+				stop('PhysicsRepRootRef 绑定失败：' .. tostring(err));
 				return;
 			end;
+			boundRoot, boundTo = myHrp, theirHrp;
+			bindRetryAt = now + 0.1;
 		end;
-
-		
-		local base = followHandle:Get();
-
-		if (not base or base.Parent == nil) then
-			stop();
-
-			return;
-		end;
-
-		theirHrp = base;
 
 		local mode = library.flags.followMode or '背后';
 		local distance = tonumber(library.flags.followDistance) or 7;
 		local goal = goalPosition(theirHrp.CFrame, mode, distance);
-
-		
-		if ((goal - myHrp.Position).Magnitude > 80 and type(ACB) == 'table'
-			and type(ACB.teleportTo) == 'function') then
-			ACB.teleportTo(goal);
-		end;
-
-		alignPos.Position = goal;
-
 		local facing = facingCFrame(goal, theirHrp.Position, theirHrp.CFrame);
-
-		alignOrient.CFrame = facing;
-
-		
-		
-		
-		local seatGetter = getgenv().__gakuranSeatPart;
-
-		if (type(seatGetter) == 'function') then
-			local okSeat, seatPart = pcall(seatGetter);
-
-			if (okSeat and typeof(seatPart) == 'Instance' and seatPart.Parent) then
-				pcall(function()
-					seatPart.CFrame = CFrame.new(seatPart.Position, seatPart.Position + facing.LookVector);
-				end);
-			end;
-		end;
+		place(myHrp, facing);
 	end;
 
 	function functions.followPlayer(toggle)
@@ -15889,16 +15908,14 @@ do
 			return;
 		end;
 
-		if (not attach(LocalPlayer.Character)) then
-			ToastNotif.new({ text = '你自己的角色还没加载', duration = 3 });
-
-			stop();
-
+		if (target == LocalPlayer or not hasHiddenApi()) then
+			stop('请选择其他玩家，并使用支持 sethiddenproperty / InstanceHandle 的执行器');
 			return;
 		end;
 
 		
-		followHandle = InstanceHandle.new(targetHrp);
+		stop();
+		library.flags.followPlayer = true;
 		followPlayer = target;
 
 		
@@ -15910,11 +15927,12 @@ do
 
 		local token = followToken;
 
-		followConn = RunService.Heartbeat:Connect(function()
+		maid.followPlayer = RunService.Heartbeat:Connect(function()
 			if (followToken ~= token) then return end;
-
-			tick();
+			local ok, err = pcall(tick);
+			if (not ok) then stop('跟随异常：' .. tostring(err)) end;
 		end);
+		followConn = maid.followPlayer;
 
 		ToastNotif.new({
 			text = string.format('开始跟随 %s（%s）', tostring(target.Name), tostring(library.flags.followMode or '背后'));
@@ -15923,33 +15941,6 @@ do
 	end;
 
 	
-	LocalPlayer.CharacterAdded:Connect(function(character)
-		if (not library.flags.followPlayer) then return end;
-
-		task.defer(function()
-			if (library.flags.followPlayer and attach(character) and followPlayer) then
-				local theirHrp = followPlayer.Character
-					and followPlayer.Character:FindFirstChild('HumanoidRootPart');
-
-				if (theirHrp) then
-					
-					followHandle = InstanceHandle.new(theirHrp);
-
-					followToken += 1;
-
-					local token = followToken;
-
-					followConn = RunService.Heartbeat:Connect(function()
-						if (followToken ~= token) then return end;
-
-						tick();
-					end);
-				else
-					stop();
-				end;
-			end;
-		end);
-	end);
 
 
 
@@ -16168,17 +16159,7 @@ do
 end;
 
 	library.unloadMaid:GiveTask(function()
-		followToken += 1;
-		followHandle = nil;
-		followPlayer = nil;
-
-		detach();
-
-		if (prevNoclip == false) then
-			setNoclip(false);
-		end;
-
-		prevNoclip = nil;
+		stop();
 	end);
 end;
 
@@ -17112,7 +17093,7 @@ do
 		miscSection:AddToggle({
 			text = '聊天记录',
 			flag = 'Chat Logger',
-			tip = '把服务器聊天抓到一个可拖动的窗口里（配色跟主界面一致）',
+			tip = '电脑上抓到一个可拖动窗口；手机上直接用 Roblox 自带聊天',
 			callback = functions.chatLogger,
 		});
 
@@ -18965,6 +18946,16 @@ local keybindLoadAt = tick();
 do 
     local Binds = {};
 
+    
+    
+    local MobileUI = sharedRequire('@utils/MobileUI.lua');
+    local isTouchDevice = type(MobileUI) == 'table'
+        and type(MobileUI.isTouch) == 'function'
+        and MobileUI.isTouch();
+
+    
+    
+    if (not isTouchDevice) then
     local keybinds = library:AddTab('按键');
 
     local column1 = keybinds:AddColumn();
@@ -19033,6 +19024,7 @@ do
             end;
         end
     });
+    end;
 end;
 
 printf('[Script] [Keybinds] Took %.02f to load', tick() - keybindLoadAt);
@@ -19341,11 +19333,15 @@ local UserInputService, TextService = Services:Get('UserInputService', 'TextServ
 
 local COLUMN_WIDTH = 239;
 local COLUMN_MARGIN = 8;
-local TOP_BAR_HEIGHT = 52;
-local PAGER_HEIGHT = 36;
+
+
+
+
+local TOP_BAR_HEIGHT = 54;
+local PAGER_HEIGHT = 44;
 local PANEL_HEIGHT = 470;
-local TAB_HEIGHT = 30;
-local TAB_TEXT_SIZE = 15;
+local TAB_HEIGHT = 38;
+local TAB_TEXT_SIZE = 17;
 local MOBILE_MAX_TRANSPARENCY = 20;
 
 local MobileUI = {};
@@ -19424,6 +19420,32 @@ function MobileUI:getPageSize()
 	return aspect >= 1.7 and 2 or 1;
 end;
 
+
+
+
+function MobileUI:getContentHeight()
+	local library = self.library;
+	local best = 0;
+
+	if (library.columnHolder) then
+		for _, child in next, library.columnHolder:GetChildren() do
+			if (child:IsA('ScrollingFrame')) then
+				local canvas = 0;
+
+				pcall(function()
+					canvas = child.CanvasSize.Y.Offset;
+				end);
+
+				if (canvas > best) then
+					best = canvas;
+				end;
+			end;
+		end;
+	end;
+
+	return best;
+end;
+
 function MobileUI:getLogicalSize()
 	local pageSize = self:getPageSize();
 	local usable = self:getUsableSize();
@@ -19431,7 +19453,16 @@ function MobileUI:getLogicalSize()
 
 	
 	
-	local height = math.clamp(usable.Y / 1.15, 300, PANEL_HEIGHT);
+	
+	local chrome = TOP_BAR_HEIGHT + 3 + PAGER_HEIGHT + 14;
+	local content = self:getContentHeight();
+
+	if (content <= 0) then
+		content = PANEL_HEIGHT * 0.55;
+	end;
+
+	local maxHeight = math.max(260, usable.Y / 1.02);
+	local height = math.clamp(content + chrome, 260, maxHeight);
 
 	return Vector2.new(width, math.floor(height + 0.5));
 end;
@@ -19937,6 +19968,11 @@ function MobileUI:hookSelectTab()
 		self:applyScale();
 		self:applyTabStyle(tab);
 		self:refreshColumns(tab);
+
+		
+		task.defer(function()
+			pcall(function() self:applyScale() end);
+		end);
 	end;
 end;
 
@@ -20433,6 +20469,11 @@ function MobileUI:afterInit()
 	if (library.mobileToggle) then
 		library.mobileToggle.Visible = not library.open;
 	end;
+
+	
+	task.defer(function()
+		pcall(function() self:applyScale() end);
+	end);
 end;
 
 return MobileUI;

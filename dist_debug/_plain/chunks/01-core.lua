@@ -19,7 +19,7 @@ if (type(MODULES) ~= 'table') then
 end;
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 10:36:23
+    生成时间: 2026-11-01 13:14:51
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -2564,6 +2564,16 @@ local keybindLoadAt = tick();
 do 
     local Binds = {};
 
+    
+    
+    local MobileUI = sharedRequire('@utils/MobileUI.lua');
+    local isTouchDevice = type(MobileUI) == 'table'
+        and type(MobileUI.isTouch) == 'function'
+        and MobileUI.isTouch();
+
+    
+    
+    if (not isTouchDevice) then
     local keybinds = library:AddTab('按键');
 
     local column1 = keybinds:AddColumn();
@@ -2632,6 +2642,7 @@ do
             end;
         end
     });
+    end;
 end;
 
 printf('[Script] [Keybinds] Took %.02f to load', tick() - keybindLoadAt);
@@ -2940,11 +2951,15 @@ local UserInputService, TextService = Services:Get('UserInputService', 'TextServ
 
 local COLUMN_WIDTH = 239;
 local COLUMN_MARGIN = 8;
-local TOP_BAR_HEIGHT = 52;
-local PAGER_HEIGHT = 36;
+
+
+
+
+local TOP_BAR_HEIGHT = 54;
+local PAGER_HEIGHT = 44;
 local PANEL_HEIGHT = 470;
-local TAB_HEIGHT = 30;
-local TAB_TEXT_SIZE = 15;
+local TAB_HEIGHT = 38;
+local TAB_TEXT_SIZE = 17;
 local MOBILE_MAX_TRANSPARENCY = 20;
 
 local MobileUI = {};
@@ -3023,6 +3038,32 @@ function MobileUI:getPageSize()
 	return aspect >= 1.7 and 2 or 1;
 end;
 
+
+
+
+function MobileUI:getContentHeight()
+	local library = self.library;
+	local best = 0;
+
+	if (library.columnHolder) then
+		for _, child in next, library.columnHolder:GetChildren() do
+			if (child:IsA('ScrollingFrame')) then
+				local canvas = 0;
+
+				pcall(function()
+					canvas = child.CanvasSize.Y.Offset;
+				end);
+
+				if (canvas > best) then
+					best = canvas;
+				end;
+			end;
+		end;
+	end;
+
+	return best;
+end;
+
 function MobileUI:getLogicalSize()
 	local pageSize = self:getPageSize();
 	local usable = self:getUsableSize();
@@ -3030,7 +3071,16 @@ function MobileUI:getLogicalSize()
 
 	
 	
-	local height = math.clamp(usable.Y / 1.15, 300, PANEL_HEIGHT);
+	
+	local chrome = TOP_BAR_HEIGHT + 3 + PAGER_HEIGHT + 14;
+	local content = self:getContentHeight();
+
+	if (content <= 0) then
+		content = PANEL_HEIGHT * 0.55;
+	end;
+
+	local maxHeight = math.max(260, usable.Y / 1.02);
+	local height = math.clamp(content + chrome, 260, maxHeight);
 
 	return Vector2.new(width, math.floor(height + 0.5));
 end;
@@ -3536,6 +3586,11 @@ function MobileUI:hookSelectTab()
 		self:applyScale();
 		self:applyTabStyle(tab);
 		self:refreshColumns(tab);
+
+		
+		task.defer(function()
+			pcall(function() self:applyScale() end);
+		end);
 	end;
 end;
 
@@ -4032,6 +4087,11 @@ function MobileUI:afterInit()
 	if (library.mobileToggle) then
 		library.mobileToggle.Visible = not library.open;
 	end;
+
+	
+	task.defer(function()
+		pcall(function() self:applyScale() end);
+	end);
 end;
 
 return MobileUI;
