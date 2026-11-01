@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 22:23:28
+    生成时间: 2026-11-01 22:37:36
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -11390,11 +11390,20 @@ do
 		
 		
 		
-		if (character:GetAttribute('Stunned') and not character:GetAttribute('Parried')) then
+		
+		
+		
+		
+		
+		local parried = character:GetAttribute('Parried');
+
+		if (character:GetAttribute('Stunned') and not parried
+			and not getFlag('enableAutoParry', false)) then
 			return false, 'stunned';
 		end;
 
-		if (character:GetAttribute('CantAnything') and not character:GetAttribute('Parried')) then
+		if (character:GetAttribute('CantAnything') and not parried
+			and not getFlag('enableAutoParry', false)) then
 			return false, 'cant';
 		end;
 
@@ -17190,6 +17199,14 @@ do
 		local section = column:AddSection('版本更新');
 
 		local UPDATES = {
+			{
+				v = '1.1.179';
+				g = 'Gakuran';
+				at = '2026-11-01 22:40';
+				lines = {
+					'修复被连击时本地误判无法格挡';
+				};
+			};
 			{
 				v = '1.1.178';
 				g = 'Gakuran';
