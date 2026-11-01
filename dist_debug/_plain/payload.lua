@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 18:00:58
+    生成时间: 2026-11-01 18:04:00
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -16219,9 +16219,15 @@ do
 		
 		
 		
+		
+		
 		if (distance <= DEADZONE) then
 			pcall(function()
+				local rotationOnly = targetCF - targetCF.Position;
+
+				myHrp.CFrame = CFrame.new(myHrp.Position) * rotationOnly;
 				myHrp.AssemblyLinearVelocity = Vector3.zero;
+				myHrp.AssemblyAngularVelocity = Vector3.zero;
 			end);
 
 			return true;
@@ -16455,10 +16461,11 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.148';
+				v = '1.1.149';
 				g = 'Gakuran';
 				at = '2026-11-01 17:40';
 				lines = {
+					'吸附时角色始终面朝目标，不再左右乱转';
 					'调试统计现在会显示被僵直拦下的次数';
 					'修复吸附悬停时上下晃动';
 					'吸附到位后保持静止，不再一直播移动动画';
