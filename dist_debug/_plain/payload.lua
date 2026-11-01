@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 17:54:03
+    生成时间: 2026-11-01 17:57:11
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -16339,7 +16339,7 @@ do
 			if (boundRoot and boundRoot ~= myHrp) then unbindRepRoot(boundRoot) end;
 			local ok, err = bindRepRoot(myHrp, theirHrp);
 			if (not ok) then
-				stop('PhysicsRepRootRef 绑定失败：' .. tostring(err));
+				stop('吸附启动失败，请重试');
 				return;
 			end;
 			boundRoot, boundTo = myHrp, theirHrp;
@@ -16385,7 +16385,7 @@ do
 		end;
 
 		if (target == LocalPlayer or not hasHiddenApi()) then
-			stop('请选择其他玩家，并使用支持 sethiddenproperty / InstanceHandle 的执行器');
+			stop('请选择其他玩家');
 			return;
 		end;
 
@@ -16440,7 +16440,7 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.146';
+				v = '1.1.147';
 				g = 'Gakuran';
 				at = '2026-11-01 17:40';
 				lines = {
