@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 17:37:25
+    生成时间: 2026-11-01 17:49:30
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -16054,12 +16054,83 @@ do
 	local controlledHumanoid = nil;
 	local prevNoclip = nil;
 	local prevAutoRotate = nil;
-
 	local function restoreRotation()
 		if (controlledHumanoid and prevAutoRotate ~= nil) then
 			pcall(function() controlledHumanoid.AutoRotate = prevAutoRotate end);
 		end;
 		controlledHumanoid = nil;
+	end;
+
+	
+	
+	
+	
+	
+	
+	
+	local followPad = nil;
+
+	local function ensurePad()
+		if (followPad and followPad.Parent) then return followPad end;
+
+		local pad = Instance.new('Part');
+
+		pad.Name = 'VluaFollowPad';
+		pad.Size = Vector3.new(7, 0.3, 7);
+		pad.Transparency = 1;
+		pad.Anchored = true;
+		pad.CanCollide = true;
+		pad.CanTouch = false;
+		pad.CanQuery = false;
+		pad.Massless = true;
+		pad.CastShadow = false;
+
+		
+		pcall(function()
+			local PhysicsService = game:GetService('PhysicsService');
+			local groupName = 'VluaFollowPadGroup';
+
+			if (not PhysicsService:IsCollisionGroupRegistered(groupName)) then
+				PhysicsService:RegisterCollisionGroup(groupName);
+				PhysicsService:CollisionGroupSetCollidable(groupName, 'Default', false);
+			end;
+
+			pad.CollisionGroup = groupName;
+
+			local myCharacter = LocalPlayer.Character;
+
+			for _, part in next, (myCharacter and myCharacter:GetDescendants() or {}) do
+				if (part:IsA('BasePart')) then
+					pcall(function() part.CollisionGroup = groupName end);
+				end;
+			end;
+		end);
+
+		pad.Parent = Workspace;
+		followPad = pad;
+
+		return pad;
+	end;
+
+	local function updatePad(hrp)
+		if (not hrp) then return end;
+
+		local pad = ensurePad();
+
+		
+		local feet = hrp.Position.Y - (hrp.Size.Y / 2);
+
+		pcall(function()
+			pad.CFrame = CFrame.new(hrp.Position.X, feet - 0.2, hrp.Position.Z);
+			pad.AssemblyLinearVelocity = Vector3.zero;
+		end);
+	end;
+
+	local function destroyPad()
+		if (followPad) then
+			pcall(function() followPad:Destroy() end);
+			followPad = nil;
+		end;
 	end;
 
 	
@@ -16188,6 +16259,8 @@ do
 		followToken += 1;
 		followPlayer = nil;
 
+		destroyPad();
+
 		detach();
 
 		
@@ -16235,8 +16308,14 @@ do
 			restoreRotation();
 			controlledHumanoid = humanoid;
 			prevAutoRotate = humanoid and humanoid.AutoRotate;
-			if (humanoid) then humanoid.AutoRotate = false end;
+
+			if (humanoid) then
+				humanoid.AutoRotate = false;
+			end;
 		end;
+
+		
+		updatePad(myHrp);
 
 		local now = os.clock();
 		
@@ -16345,10 +16424,11 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.144';
+				v = '1.1.145';
 				g = 'Gakuran';
 				at = '2026-11-01 17:40';
 				lines = {
+					'吸附时角色贴地站立，不再悬空';
 					'修复手机端开关和按钮点不动';
 					'弹反手感优化，格挡判定更准';
 					'吸附功能修复，不再被拉回原位';
