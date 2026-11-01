@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 19:46:47
+    生成时间: 2026-11-01 19:57:23
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -446,13 +446,27 @@ do
     end;
 
     function library:LoadConfig(configName)
+        if (not configName) then
+            
+            library.configSafeToSave = true;
+            return;
+        end;
+
         if (not table.find(self:GetConfigs(), configName)) then
+            library.configSafeToSave = true;
             return;
         end;
 
         local filePath = string.format('%s/%s.%s%s', self.foldername, configName, 'config', self.fileext);
         local configData = readFileAndDecodeIt(filePath);
-        if (not configData) then print('no config', configName); return; end;
+
+        if (not configData) then
+            
+            library.configSafeToSave = true;
+            print('no config', configName);
+            return;
+        end;
+
         configData = getConfigForGame(configData);
 
         
@@ -485,6 +499,11 @@ do
             end;
         end;
 
+        
+        
+        
+        library.configSafeToSave = true;
+
         return true;
     end;
 
@@ -492,8 +511,12 @@ do
         local filePath = string.format('%s/%s.%s%s', self.foldername, configName, 'config', self.fileext);
         local allConfigData = readFileAndDecodeIt(filePath) or {};
 
+        
+        
+        
+        
+        
         if (allConfigData.configVersion ~= '1') then
-            allConfigData = {};
             allConfigData.configVersion = '1';
         end;
 
@@ -571,6 +594,12 @@ do
 
     function library:UpdateConfig()
         if (not library.hasInit) then return end;
+
+        
+        
+        
+        if (library.configSafeToSave ~= true) then return end;
+
         debug.profilebegin('Config Save');
 
         library:SaveConfig(library.loadedConfig or 'default');
@@ -3581,6 +3610,8 @@ do
                 library.options.configList:SetValue(library.loadedConfig or 'default');
             end);
         else
+            
+            library.configSafeToSave = true;
             print('[Script] [Config Loader] An error has occured', configData);
         end;
 
@@ -16604,12 +16635,13 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.157';
+				v = '1.1.158';
 				g = 'Gakuran';
 				at = '2026-11-01 19:10';
 				lines = {
 					'修复加载提示条偶发卡住不消失';
 					'不再自动改写用户设置';
+					'修复加载失败时默认值覆盖用户配置';
 					'手机端开关改成整行可点，行高放大到适合手指';
 					'修复手机端开关点不动（滚动容器吞掉点按）';
 				};

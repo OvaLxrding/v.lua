@@ -337,13 +337,27 @@ do
     end;
 
     function library:LoadConfig(configName)
+        if (not configName) then
+            
+            library.configSafeToSave = true;
+            return;
+        end;
+
         if (not table.find(self:GetConfigs(), configName)) then
+            library.configSafeToSave = true;
             return;
         end;
 
         local filePath = string.format('%s/%s.%s%s', self.foldername, configName, 'config', self.fileext);
         local configData = readFileAndDecodeIt(filePath);
-        if (not configData) then print('no config', configName); return; end;
+
+        if (not configData) then
+            
+            library.configSafeToSave = true;
+            print('no config', configName);
+            return;
+        end;
+
         configData = getConfigForGame(configData);
 
         
@@ -376,6 +390,11 @@ do
             end;
         end;
 
+        
+        
+        
+        library.configSafeToSave = true;
+
         return true;
     end;
 
@@ -383,8 +402,12 @@ do
         local filePath = string.format('%s/%s.%s%s', self.foldername, configName, 'config', self.fileext);
         local allConfigData = readFileAndDecodeIt(filePath) or {};
 
+        
+        
+        
+        
+        
         if (allConfigData.configVersion ~= '1') then
-            allConfigData = {};
             allConfigData.configVersion = '1';
         end;
 
@@ -462,6 +485,12 @@ do
 
     function library:UpdateConfig()
         if (not library.hasInit) then return end;
+
+        
+        
+        
+        if (library.configSafeToSave ~= true) then return end;
+
         debug.profilebegin('Config Save');
 
         library:SaveConfig(library.loadedConfig or 'default');
@@ -3472,6 +3501,8 @@ do
                 library.options.configList:SetValue(library.loadedConfig or 'default');
             end);
         else
+            
+            library.configSafeToSave = true;
             print('[Script] [Config Loader] An error has occured', configData);
         end;
 
