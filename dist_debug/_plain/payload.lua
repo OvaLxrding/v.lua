@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 17:57:11
+    生成时间: 2026-11-01 18:00:58
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -10931,6 +10931,17 @@ do
 		if (character:GetAttribute('StaffModPeaceMode')) then return false, 'staff' end;
 		if (character:GetAttribute('ParryWindowDisabled')) then return false, 'nowindow' end;
 
+		
+		
+		
+		if (character:GetAttribute('Stunned') and not character:GetAttribute('Parried')) then
+			return false, 'stunned';
+		end;
+
+		if (character:GetAttribute('CantAnything') and not character:GetAttribute('Parried')) then
+			return false, 'cant';
+		end;
+
 		return true;
 	end;
 
@@ -16081,7 +16092,11 @@ do
 		pad.Anchored = true;
 		pad.CanCollide = true;
 		pad.CanTouch = false;
-		pad.CanQuery = false;
+
+		
+		
+		
+		pad.CanQuery = true;
 		pad.Massless = true;
 		pad.CastShadow = false;
 
@@ -16440,10 +16455,12 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.147';
+				v = '1.1.148';
 				g = 'Gakuran';
 				at = '2026-11-01 17:40';
 				lines = {
+					'调试统计现在会显示被僵直拦下的次数';
+					'修复吸附悬停时上下晃动';
 					'吸附到位后保持静止，不再一直播移动动画';
 					'吸附时角色贴地站立，不再悬空';
 					'修复手机端开关和按钮点不动';
