@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 18:08:36
+    生成时间: 2026-11-01 18:20:55
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -16213,29 +16213,9 @@ do
 	
 	
 	
-	local DEADZONE = 1.5;   
-
 	local function place(myHrp, targetCF)
-		local delta = targetCF.Position - myHrp.Position;
-		local distance = delta.Magnitude;
-
 		
 		
-		
-		
-		
-		if (distance <= DEADZONE) then
-			pcall(function()
-				local rotationOnly = targetCF - targetCF.Position;
-
-				myHrp.CFrame = CFrame.new(myHrp.Position) * rotationOnly;
-				myHrp.AssemblyLinearVelocity = Vector3.zero;
-				myHrp.AssemblyAngularVelocity = Vector3.zero;
-			end);
-
-			return true;
-		end;
-
 		return pcall(function()
 			myHrp.CFrame = targetCF;
 			myHrp.AssemblyLinearVelocity = Vector3.zero;
@@ -16464,10 +16444,11 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.150';
+				v = '1.1.151';
 				g = 'Gakuran';
 				at = '2026-11-01 17:40';
 				lines = {
+					'吸附移除死区，始终精确贴合目标';
 					'弹反改为按实测延迟自动校准，不再依赖理论值';
 					'吸附时角色始终面朝目标，不再左右乱转';
 					'调试统计现在会显示被僵直拦下的次数';
