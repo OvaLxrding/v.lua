@@ -314,6 +314,24 @@ do
         library.unloadMaid:Destroy();
     end
 
+    
+    library.pendingConfig = library.pendingConfig or {};
+
+    
+    local function takePending(flag)
+        local pending = library.pendingConfig;
+
+        if (not pending or not flag) then return nil end;
+
+        local value = pending[flag];
+
+        if (value ~= nil) then
+            pending[flag] = nil;
+        end;
+
+        return value;
+    end;
+
     local function readFileAndDecodeIt(filePath)
         if (not isfile(filePath)) then return; end;
 
@@ -365,13 +383,24 @@ do
         library.options.configList:SetValue(configName);
 
         for _, option in next, self.options do
-            if (not option.hasInit or option.type == 'button' or not option.flag or option.skipflag) then
+            if (option.type == 'button' or not option.flag or option.skipflag) then
                 continue;
             end;
 
             local configDataVal = configData[option.flag];
 
             if (typeof(configDataVal) == 'nil') then
+                continue;
+            end;
+
+            
+            
+            
+            
+            
+            
+            if (not option.hasInit) then
+                library.pendingConfig[option.flag] = configDataVal;
                 continue;
             end;
 
@@ -895,6 +924,13 @@ do
         end
 
         task.defer(function()
+            local pending = takePending(option.flag);
+
+            if (pending ~= nil) then
+                option:SetState(pending == 1 or pending == true);
+                return;
+            end;
+
             option:SetState(option.state);
         end);
 
@@ -1271,7 +1307,13 @@ do
             end;
         end;
 
-        option:SetKeys();
+        local pendingKeys = takePending(option.flag);
+
+        if (pendingKeys ~= nil) then
+            option:SetKeys(pendingKeys);
+        else
+            option:SetKeys();
+        end;
     end
 
     local function createSlider(option, parent)
@@ -1429,9 +1471,16 @@ do
         end
 
         task.defer(function()
-            if library then
-                option:SetValue(option.value)
-            end
+            if (not library) then return end;
+
+            local pending = takePending(option.flag);
+
+            if (pending ~= nil) then
+                option:SetValue(pending);
+                return;
+            end;
+
+            option:SetValue(option.value)
         end)
     end
 
@@ -1814,9 +1863,16 @@ do
         end
 
         task.defer(function()
-            if library and not option.noload then
-                option:SetValue(option.value)
-            end
+            if (not library or option.noload) then return end;
+
+            local pending = takePending(option.flag);
+
+            if (pending ~= nil) then
+                option:SetValue(pending);
+                return;
+            end;
+
+            option:SetValue(option.value)
         end)
 
         function option:Close()
@@ -2298,9 +2354,25 @@ do
         end
 
         task.defer(function()
-            if library then
-                option:SetColor(option.color)
-            end
+            if (not library) then return end;
+
+            local pendingColor = takePending(option.flag);
+
+            if (pendingColor ~= nil) then
+                pcall(function()
+                    option:SetColor(Color3.fromHex(pendingColor));
+                end);
+
+                local pendingTrans = takePending(option.flag .. 'Transparency');
+
+                if (pendingTrans ~= nil and option.SetTrans) then
+                    pcall(function() option:SetTrans(pendingTrans) end);
+                end;
+
+                return;
+            end;
+
+            option:SetColor(option.color)
         end)
 
         function option:Close()
@@ -2990,19 +3062,39 @@ do
         return warning
     end
 
+    
+    
+    
+    
+    
+    
+    function library:SetOpen(state)
+        self.open = state and true or false;
+
+        if (self.main and self.base) then
+            if (not self.open and self.popup) then
+                self.popup:Close();
+            end;
+
+            self.base.Enabled = self.open;
+        end;
+
+        if (library.tooltip) then
+            library.tooltip.Position = UDim2.fromScale(10, 10);
+        end;
+    end;
+
     function library:Close()
-        self.open = not self.open
+        self:SetOpen(false);
+    end;
 
-        if self.main then
-            if self.popup then
-                self.popup:Close()
-            end
+    function library:Open()
+        self:SetOpen(true);
+    end;
 
-            self.base.Enabled = self.open
-        end
-
-        library.tooltip.Position = UDim2.fromScale(10, 10);
-    end
+    function library:Toggle()
+        self:SetOpen(not self.open);
+    end;
 
     function library:Init(silent)
         if self.hasInit then return end
@@ -3826,7 +3918,7 @@ settingsMain:AddBox({
             flag = 'UI Toggle',
             nomouse = true,
             key = 'LeftAlt',
-            callback = function() library:Close() end
+            callback = function() library:Toggle() end
         })
 
         settingsMenu:AddColor({

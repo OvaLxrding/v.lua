@@ -19,7 +19,7 @@ if (type(MODULES) ~= 'table') then
 end;
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 19:57:23
+    生成时间: 2026-11-01 20:12:05
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -2601,10 +2601,24 @@ do
 
     
     local blacklistedSections = {'Trinkets', 'Ingredients', 'Spells', 'Bots', 'Configs', '配置'};
+
+    
+    
+    local blacklistedFlags = {
+        ['unloadMenu'] = true;
+        ['resetAllKeybinds'] = true;
+        ['saveConfig'] = true;
+        ['loadConfig'] = true;
+        ['deleteConfig'] = true;
+    };
+
     local temp = {};
 
     for _, v in next, library.options do
-        if ((v.type == 'toggle' or v.type == 'button') and v.section and not table.find(blacklistedSections, v.section.title)) then
+        if ((v.type == 'toggle' or v.type == 'button')
+            and v.section
+            and not blacklistedFlags[v.flag]
+            and not table.find(blacklistedSections, v.section.title)) then
             local section = sections[v.section.title];
 
             table.insert(temp, function()
@@ -3211,9 +3225,14 @@ function MobileUI:buildBackdrop()
 
 	
 	library:AddConnection(backdrop.InputBegan, function(input)
-		if (self.isPrimaryInput(input)) then
-			library:Close();
-		end;
+		if (not self.isPrimaryInput(input)) then return end;
+
+		
+		
+		
+		task.defer(function()
+			library:SetOpen(false);
+		end);
 	end);
 end;
 
@@ -3882,7 +3901,9 @@ function MobileUI:buildToggle()
 		if (hasMoved) then
 			self:clampToggle();
 		else
-			library:Close();
+			
+			
+			library:Toggle();
 		end;
 	end);
 

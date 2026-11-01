@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 19:57:23
+    生成时间: 2026-11-01 20:12:05
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -423,6 +423,24 @@ do
         library.unloadMaid:Destroy();
     end
 
+    
+    library.pendingConfig = library.pendingConfig or {};
+
+    
+    local function takePending(flag)
+        local pending = library.pendingConfig;
+
+        if (not pending or not flag) then return nil end;
+
+        local value = pending[flag];
+
+        if (value ~= nil) then
+            pending[flag] = nil;
+        end;
+
+        return value;
+    end;
+
     local function readFileAndDecodeIt(filePath)
         if (not isfile(filePath)) then return; end;
 
@@ -474,13 +492,24 @@ do
         library.options.configList:SetValue(configName);
 
         for _, option in next, self.options do
-            if (not option.hasInit or option.type == 'button' or not option.flag or option.skipflag) then
+            if (option.type == 'button' or not option.flag or option.skipflag) then
                 continue;
             end;
 
             local configDataVal = configData[option.flag];
 
             if (typeof(configDataVal) == 'nil') then
+                continue;
+            end;
+
+            
+            
+            
+            
+            
+            
+            if (not option.hasInit) then
+                library.pendingConfig[option.flag] = configDataVal;
                 continue;
             end;
 
@@ -1004,6 +1033,13 @@ do
         end
 
         task.defer(function()
+            local pending = takePending(option.flag);
+
+            if (pending ~= nil) then
+                option:SetState(pending == 1 or pending == true);
+                return;
+            end;
+
             option:SetState(option.state);
         end);
 
@@ -1380,7 +1416,13 @@ do
             end;
         end;
 
-        option:SetKeys();
+        local pendingKeys = takePending(option.flag);
+
+        if (pendingKeys ~= nil) then
+            option:SetKeys(pendingKeys);
+        else
+            option:SetKeys();
+        end;
     end
 
     local function createSlider(option, parent)
@@ -1538,9 +1580,16 @@ do
         end
 
         task.defer(function()
-            if library then
-                option:SetValue(option.value)
-            end
+            if (not library) then return end;
+
+            local pending = takePending(option.flag);
+
+            if (pending ~= nil) then
+                option:SetValue(pending);
+                return;
+            end;
+
+            option:SetValue(option.value)
         end)
     end
 
@@ -1923,9 +1972,16 @@ do
         end
 
         task.defer(function()
-            if library and not option.noload then
-                option:SetValue(option.value)
-            end
+            if (not library or option.noload) then return end;
+
+            local pending = takePending(option.flag);
+
+            if (pending ~= nil) then
+                option:SetValue(pending);
+                return;
+            end;
+
+            option:SetValue(option.value)
         end)
 
         function option:Close()
@@ -2407,9 +2463,25 @@ do
         end
 
         task.defer(function()
-            if library then
-                option:SetColor(option.color)
-            end
+            if (not library) then return end;
+
+            local pendingColor = takePending(option.flag);
+
+            if (pendingColor ~= nil) then
+                pcall(function()
+                    option:SetColor(Color3.fromHex(pendingColor));
+                end);
+
+                local pendingTrans = takePending(option.flag .. 'Transparency');
+
+                if (pendingTrans ~= nil and option.SetTrans) then
+                    pcall(function() option:SetTrans(pendingTrans) end);
+                end;
+
+                return;
+            end;
+
+            option:SetColor(option.color)
         end)
 
         function option:Close()
@@ -3099,19 +3171,39 @@ do
         return warning
     end
 
+    
+    
+    
+    
+    
+    
+    function library:SetOpen(state)
+        self.open = state and true or false;
+
+        if (self.main and self.base) then
+            if (not self.open and self.popup) then
+                self.popup:Close();
+            end;
+
+            self.base.Enabled = self.open;
+        end;
+
+        if (library.tooltip) then
+            library.tooltip.Position = UDim2.fromScale(10, 10);
+        end;
+    end;
+
     function library:Close()
-        self.open = not self.open
+        self:SetOpen(false);
+    end;
 
-        if self.main then
-            if self.popup then
-                self.popup:Close()
-            end
+    function library:Open()
+        self:SetOpen(true);
+    end;
 
-            self.base.Enabled = self.open
-        end
-
-        library.tooltip.Position = UDim2.fromScale(10, 10);
-    end
+    function library:Toggle()
+        self:SetOpen(not self.open);
+    end;
 
     function library:Init(silent)
         if self.hasInit then return end
@@ -3935,7 +4027,7 @@ settingsMain:AddBox({
             flag = 'UI Toggle',
             nomouse = true,
             key = 'LeftAlt',
-            callback = function() library:Close() end
+            callback = function() library:Toggle() end
         })
 
         settingsMenu:AddColor({
@@ -16635,13 +16727,16 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.158';
+				v = '1.1.160';
 				g = 'Gakuran';
 				at = '2026-11-01 19:10';
 				lines = {
 					'修复加载提示条偶发卡住不消失';
 					'不再自动改写用户设置';
 					'修复加载失败时默认值覆盖用户配置';
+					'修复切换页签把未初始化页面的设置重置为默认';
+					'关闭界面快捷键不再误触发卸载';
+					'点击面板外不再穿透触发内部按钮';
 					'手机端开关改成整行可点，行高放大到适合手指';
 					'修复手机端开关点不动（滚动容器吞掉点按）';
 				};
@@ -19857,10 +19952,24 @@ do
 
     
     local blacklistedSections = {'Trinkets', 'Ingredients', 'Spells', 'Bots', 'Configs', '配置'};
+
+    
+    
+    local blacklistedFlags = {
+        ['unloadMenu'] = true;
+        ['resetAllKeybinds'] = true;
+        ['saveConfig'] = true;
+        ['loadConfig'] = true;
+        ['deleteConfig'] = true;
+    };
+
     local temp = {};
 
     for _, v in next, library.options do
-        if ((v.type == 'toggle' or v.type == 'button') and v.section and not table.find(blacklistedSections, v.section.title)) then
+        if ((v.type == 'toggle' or v.type == 'button')
+            and v.section
+            and not blacklistedFlags[v.flag]
+            and not table.find(blacklistedSections, v.section.title)) then
             local section = sections[v.section.title];
 
             table.insert(temp, function()
@@ -20467,9 +20576,14 @@ function MobileUI:buildBackdrop()
 
 	
 	library:AddConnection(backdrop.InputBegan, function(input)
-		if (self.isPrimaryInput(input)) then
-			library:Close();
-		end;
+		if (not self.isPrimaryInput(input)) then return end;
+
+		
+		
+		
+		task.defer(function()
+			library:SetOpen(false);
+		end);
 	end);
 end;
 
@@ -21138,7 +21252,9 @@ function MobileUI:buildToggle()
 		if (hasMoved) then
 			self:clampToggle();
 		else
-			library:Close();
+			
+			
+			library:Toggle();
 		end;
 	end);
 
