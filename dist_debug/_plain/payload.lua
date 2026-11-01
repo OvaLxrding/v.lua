@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 22:14:40
+    生成时间: 2026-11-01 22:23:28
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -11582,7 +11582,15 @@ do
 		end;
 
 		
-		if (character:GetAttribute('BlockCooldown') == true) then
+		
+		
+		
+		
+		
+		
+		
+		if (character:GetAttribute('BlockCooldown') == true
+			and not getFlag('enableAutoParry', false)) then
 			noteSkip('blkcd');
 
 			tryDodge('blkcd');
@@ -17182,6 +17190,14 @@ do
 		local section = column:AddSection('版本更新');
 
 		local UPDATES = {
+			{
+				v = '1.1.178';
+				g = 'Gakuran';
+				at = '2026-11-01 22:25';
+				lines = {
+					'修复被连击时弹反不触发';
+				};
+			};
 			{
 				v = '1.1.177';
 				g = 'Gakuran';
