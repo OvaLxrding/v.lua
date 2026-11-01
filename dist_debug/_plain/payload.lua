@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 16:32:46
+    生成时间: 2026-11-01 17:30:44
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -6777,11 +6777,16 @@ end
 
 function ACB.setFly(speed)
 	ACB.fly = speed and speed or nil
+
+	
+	ACB.flyHoldPos = nil
+
 	if not ACB.fly then
 		log("飞行已关闭")
 		return
 	end
 	task.spawn(function()
+		local lastChar = nil
 		local lp = Players.LocalPlayer
 		local UIS = game:GetService("UserInputService")
 		local cam = workspace.CurrentCamera
@@ -6789,6 +6794,13 @@ function ACB.setFly(speed)
 			local char = lp.Character
 			local hrp = char and char:FindFirstChild("HumanoidRootPart")
 			local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+			
+			if char ~= lastChar then
+				lastChar = char
+				ACB.flyHoldPos = nil
+			end
+
 			if hrp and hum then
 				local dir = Vector3.new(0, 0, 0)
 
@@ -6873,6 +6885,12 @@ function ACB.setFly(speed)
 					safe(function() hrp.AssemblyAngularVelocity = Vector3.zero end)
 
 					local hold = ACB.flyHoldPos
+
+					
+					if (hold and (hold - hrp.Position).Magnitude > 50) then
+						hold = nil
+						ACB.flyHoldPos = nil
+					end
 
 					if (hold) then
 						safe(function()
@@ -9084,6 +9102,11 @@ local CONFIG = {
 
 	
 	parryOffsetMs = 0,
+
+	
+	
+	
+	
 	pingCompensation = 100,
 
 	
@@ -10316,6 +10339,13 @@ do
 	
 	
 	function resolveDelay(info, character)
+		
+		
+		
+		if (getFlag('useBaseTiming', true) == true) then
+			return baseDelay(info, character);
+		end;
+
 		local primary = styleKeyOf(character, info);
 		local record = LEARNED[learnKey(character.Name, primary, info)];
 
@@ -10653,11 +10683,31 @@ do
 	end;
 
 	
+	
+	
+	
+	
+	local function nameOf(value)
+		if (typeof(value) == 'string') then return value end;
+		if (typeof(value) ~= 'Instance') then return nil end;
+
+		if (value:IsA('Player')) then return value.Name end;
+
+		local owner = Players:GetPlayerFromCharacter(value);
+
+		if (owner) then return owner.Name end;
+
+		return value.Name;
+	end;
+
 	function onCombatHit(attackerName, victimName)
 		if (isStale()) then return end;
 
 		
 		
+		attackerName = nameOf(attackerName) or attackerName;
+		victimName = nameOf(victimName) or victimName;
+
 		if (attackerName == LocalPlayer.Name and victimName ~= LocalPlayer.Name) then
 			if (Players:FindFirstChild(victimName)) then
 				pcall(playHitSound);
@@ -10717,7 +10767,15 @@ do
 	
 	function onPerfectBlock(attacker, victim)
 		if (isStale()) then return end;
-		if (victim ~= LocalPlayer.Name) then return end;
+
+		local victimName = nameOf(victim);
+
+		if (victimName ~= nil) then
+			if (victimName ~= LocalPlayer.Name) then return end;
+		elseif (not (lastLeadAt and (os.clock() - lastLeadAt) < 1.0)) then
+			
+			return;
+		end;
 
 		parryCount += 1;
 
@@ -10891,19 +10949,14 @@ do
 		
 		
 		
+		
+		
 		local confirmed = false;
 
 		if (type(EvasiveModule.IsDashActive) == 'function') then
-			for _ = 1, 3 do
-				local okActive, active = pcall(EvasiveModule.IsDashActive);
+			local okActive, active = pcall(EvasiveModule.IsDashActive);
 
-				if (okActive and active == true) then
-					confirmed = true;
-					break;
-				end;
-
-				task.wait(0.02);
-			end;
+			confirmed = (okActive and active == true);
 		else
 			confirmed = true;
 		end;
@@ -11111,35 +11164,6 @@ do
 			
 			
 			
-			local burst = math.floor(tonumber(getFlag('blockBurst', 1)) or 1);
-			local burstGap = (tonumber(getFlag('blockBurstGap', 40)) or 40) / 1000;
-
-			for attemptIndex = 2, burst do
-				task.wait(burstGap);
-
-				if (not isEnabled()) then break end;
-
-				pcall(function() releaseBlock('AutoParryBurst') end);
-
-				credit['Block.Activated'] = tick();
-
-				if (BlockModule) then
-					pcall(function() BlockModule.Block() end);
-				else
-					character:SetAttribute('Blocking', true);
-
-					pcall(function()
-						ServerRemote:FireServer(
-							{ Type = 'Combat', Action = 'Block', Func = 'Activated' },
-							Workspace:GetServerTimeNow()
-						);
-					end);
-				end;
-			end;
-
-			
-			
-			
 			
 			local holdSeconds = (getFlag('blockHold', CONFIG.autoReleaseMs) or CONFIG.autoReleaseMs) / 1000;
 
@@ -11213,8 +11237,8 @@ do
 		pcall(ensureStance);
 	end;
 
-	function ensureStance()
-		if ((not getFlag('autoStance', true) and not autoParryForceStance) or not EquipModule) then return end;
+	function ensureStance(force)
+		if ((not force and not getFlag('autoStance', true)) or not EquipModule) then return end;
 
 		local character = myChar();
 
@@ -11648,6 +11672,17 @@ do
 		end;
 
 		
+		
+		
+		if (character:GetAttribute('Equip') ~= true) then
+			noteSkip('nostance');
+
+			pcall(ensureStance, true);
+
+			return;
+		end;
+
+		
 		if (getFlag('grappleAware', false) and isGrappleMove(info)) then
 			tryDodge('grapple', true);
 
@@ -11681,9 +11716,7 @@ do
 		
 		
 		
-		
-		
-		if (not panic and (getFlag('faceTarget', true) or getFlag('requireFacing', true))) then
+		if (not panic and getFlag('faceTarget', false)) then
 			faceTarget(theirRoot);
 		end;
 
@@ -11738,6 +11771,7 @@ do
 		end;
 
 		local ping = smoothPing();
+
 		local lead = pickLead();
 		local offsetMs = pickParryOffset();
 
@@ -12346,7 +12380,7 @@ do
 			autoParryForcedSelfBlock = true;
 		end;
 
-		autoParryForceStance = true;
+		
 
 		table.clear(recentSwings);
 		table.clear(OBS.swings);
@@ -12363,7 +12397,7 @@ do
 
 		maid.stanceLoop = RunService.Heartbeat:Connect(function()
 			if (not isEnabled()) then return end;
-			if (not getFlag('autoStance', true) and not autoParryForceStance) then return end;
+			if (not getFlag('autoStance', true)) then return end;
 
 			local now = os.clock();
 
@@ -12616,6 +12650,14 @@ do
 	local bypassFlyEnabled = false;
 	local tempSeat, seatPart, seatWasAnchored, manualWeld;
 
+	
+	
+	
+	local seatOwner;
+
+	
+	local seatModeWanted = false;
+
 	local function getCharacter()
 		local character = LocalPlayer.Character;
 
@@ -12641,6 +12683,7 @@ do
 
 		seatPart = nil;
 		seatWasAnchored = nil;
+		seatOwner = nil;
 
 		local _, humanoid = getCharacter();
 
@@ -12661,6 +12704,7 @@ do
 		if (humanoid.SeatPart) then
 			seatPart = humanoid.SeatPart;
 			seatWasAnchored = seatPart.Anchored;
+			seatOwner = character;
 
 			return true;
 		end;
@@ -12681,6 +12725,7 @@ do
 
 		seatPart = tempSeat;
 		seatWasAnchored = false;
+		seatOwner = character;
 
 		return true;
 	end;
@@ -12690,6 +12735,23 @@ do
 		local character, humanoid, rootPart = getCharacter();
 
 		if (not (humanoid and rootPart and seatPart)) then return end;
+
+		
+		
+		
+		
+		
+		
+		
+		if (not seatModeWanted and (seatPart.Position - rootPart.Position).Magnitude > 50) then
+			clearManualWeld();
+
+			pcall(function()
+				seatPart.CFrame = CFrame.new(
+					rootPart.Position - Vector3.new(0, (rootPart.Size.Y + seatPart.Size.Y) / 2, 0)
+				);
+			end);
+		end;
 
 		if (humanoid.SeatPart ~= seatPart) then
 			if (not (manualWeld and manualWeld.Parent)) then
@@ -12714,6 +12776,36 @@ do
 		return seatPart;
 	end;
 
+	
+	
+	getgenv().__gakuranSeatControl = function(on)
+		seatModeWanted = on and true or false;
+
+		if (seatModeWanted) then
+			if (not seatPart or not seatPart.Parent) then
+				if (not attach()) then return false end;
+			end;
+
+			
+			pcall(function()
+				if (seatPart and seatPart.Parent) then
+					seatPart.Anchored = false;
+				end;
+			end);
+
+			ensureSeated();
+
+			return seatPart ~= nil;
+		end;
+
+		
+		if (not bypassFlyEnabled) then
+			detach();
+		end;
+
+		return true;
+	end;
+
 	function functions.seatFly(toggle)
 		bypassFlyEnabled = toggle and true or false;
 
@@ -12721,6 +12813,20 @@ do
 			detach();
 
 			return;
+		end;
+
+		
+		
+		local _, _, rootPartNow = getCharacter();
+
+		if (seatPart) then
+			local stale = (not seatPart.Parent)
+				or (seatOwner ~= nil and seatOwner ~= LocalPlayer.Character)
+				or (rootPartNow ~= nil and (seatPart.Position - rootPartNow.Position).Magnitude > 50);
+
+			if (stale) then
+				detach();
+			end;
 		end;
 
 		if (not seatPart) and (not attach()) then
@@ -12765,7 +12871,7 @@ do
 
 	
 	library:AddConnection(RunService.RenderStepped, function()
-		if (not bypassFlyEnabled) then return end;
+		if (not bypassFlyEnabled and not seatModeWanted) then return end;
 
 		if (not seatPart or not seatPart.Parent) then
 			seatPart = nil;
@@ -12778,7 +12884,8 @@ do
 		
 		local _, _, rootPart = getCharacter();
 
-		if (rootPart and seatPart and seatPart.Parent) then
+		
+		if (not seatModeWanted and rootPart and seatPart and seatPart.Parent) then
 			if ((seatPart.Position - rootPart.Position).Magnitude > 60) then
 				detach();
 
@@ -12792,7 +12899,13 @@ do
 		
 		
 		
-		if (tempSeat and tempSeat.Parent) then
+		
+		
+		if (seatModeWanted and tempSeat and tempSeat.Parent and tempSeat.Anchored) then
+			pcall(function() tempSeat.Anchored = false end);
+		end;
+
+		if (bypassFlyEnabled and not seatModeWanted and tempSeat and tempSeat.Parent) then
 			local wantAnchored = not hasFlyInput();
 
 			if (tempSeat.Anchored ~= wantAnchored) then
@@ -15277,6 +15390,45 @@ do
 
 		
 		
+		local labelName = descendant.Name;
+
+		if (labelName == 'Info' or labelName == 'InfoShadow') then
+			local holder = descendant.Parent;
+
+			if (holder and holder.Name == INFO_GUI_NAME) then
+				if (originalLabels[descendant] == nil) then
+					originalLabels[descendant] = descendant.Text;
+				end;
+
+				if (descendant.Text ~= ANON_NAME) then
+					pcall(function() descendant.Text = ANON_NAME end);
+				end;
+
+				
+				if (not billboardHooks[descendant]) then
+					local connection;
+
+					local okHook = pcall(function()
+						connection = descendant:GetPropertyChangedSignal('Text'):Connect(function()
+							if (not (anonSelf or anonOther)) then return end;
+							if (originalLabels[descendant] == nil) then return end;
+							if (descendant.Text ~= ANON_NAME) then
+								pcall(function() descendant.Text = ANON_NAME end);
+							end;
+						end);
+					end);
+
+					if (okHook and connection) then
+						billboardHooks[descendant] = connection;
+					end;
+				end;
+
+				return;
+			end;
+		end;
+
+		
+		
 		local sorted = sortedCache[character];
 
 		if (not sorted) then
@@ -15908,12 +16060,6 @@ do
 			followConn = nil;
 		end;
 
-		
-		local character = LocalPlayer.Character;
-		local hrp = character and character:FindFirstChild('HumanoidRootPart');
-
-		unbindRepRoot(boundRoot or hrp);
-		boundRoot = nil;
 		restoreRotation();
 
 		boundTo = nil;
@@ -15928,19 +16074,11 @@ do
 
 	
 	
+	
+	
+	
+	
 	local function place(myHrp, targetCF)
-		local seatGetter = getgenv().__gakuranSeatPart;
-
-		if (type(seatGetter) == 'function') then
-			local okSeat, seatPart = pcall(seatGetter);
-
-			if (okSeat and typeof(seatPart) == 'Instance' and seatPart.Parent) then
-				return pcall(function()
-					seatPart.CFrame = targetCF;
-				end);
-			end;
-		end;
-
 		return pcall(function()
 			myHrp.CFrame = targetCF;
 			myHrp.AssemblyLinearVelocity = Vector3.zero;
@@ -16007,6 +16145,13 @@ do
 		detach();
 
 		
+		local seatControl = getgenv().__gakuranSeatControl;
+
+		if (type(seatControl) == 'function') then
+			pcall(seatControl, false);
+		end;
+
+		
 		if (prevNoclip == false) then
 			setNoclip(false);
 		end;
@@ -16027,7 +16172,7 @@ do
 
 	local function tick()
 		if (not followPlayer or not followPlayer.Parent) then
-			stop('目标已经离开服务器，停止跟随');
+			stop('目标已经离开服务器，停止吸附');
 			return;
 		end;
 
@@ -16047,18 +16192,13 @@ do
 			if (humanoid) then humanoid.AutoRotate = false end;
 		end;
 
-		local now = os.clock();
 		
-		if (boundRoot ~= myHrp or boundTo ~= theirHrp or not bindRetryAt or now >= bindRetryAt) then
-			if (boundRoot and boundRoot ~= myHrp) then unbindRepRoot(boundRoot) end;
-			local ok, err = bindRepRoot(myHrp, theirHrp);
-			if (not ok) then
-				stop('PhysicsRepRootRef 绑定失败：' .. tostring(err));
-				return;
-			end;
-			boundRoot, boundTo = myHrp, theirHrp;
-			bindRetryAt = now + 0.1;
-		end;
+		
+		
+		
+		
+		
+		
 
 		local mode = library.flags.followMode or '背后';
 		local distance = tonumber(library.flags.followDistance) or 7;
@@ -16098,8 +16238,8 @@ do
 			return;
 		end;
 
-		if (target == LocalPlayer or not hasHiddenApi()) then
-			stop('请选择其他玩家，并使用支持 sethiddenproperty / InstanceHandle 的执行器');
+		if (target == LocalPlayer) then
+			stop('请选择其他玩家');
 			return;
 		end;
 
@@ -16113,6 +16253,14 @@ do
 
 		setNoclip(true);
 
+		
+		
+		local seatControl = getgenv().__gakuranSeatControl;
+
+		if (type(seatControl) == 'function') then
+			pcall(seatControl, false);
+		end;
+
 		followToken += 1;
 
 		local token = followToken;
@@ -16125,7 +16273,7 @@ do
 		followConn = maid.followPlayer;
 
 		ToastNotif.new({
-			text = string.format('开始跟随 %s（%s）', tostring(target.Name), tostring(library.flags.followMode or '背后'));
+			text = string.format('开始吸附 %s（%s）', tostring(target.Name), tostring(library.flags.followMode or '背后'));
 			duration = 2;
 		});
 	end;
@@ -16146,12 +16294,16 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.124';
+				v = '1.1.142';
 				g = 'Gakuran';
-				at = '2026-11-01 16:12';
+				at = '2026-11-01 17:40';
 				lines = {
-					'修复抓取流派设置加载后被覆盖';
-					'修复重载后旧功能实例继续运行';
+					'弹反手感优化，格挡判定更准';
+					'吸附功能修复，不再被拉回原位';
+					'修复弹反成功次数不统计的问题';
+					'修复飞行复活后被传送回旧位置';
+					'修复匿名模式名字板仍显示原名';
+					'精简弹反设置，移除无用选项';
 				};
 			};
 			{
@@ -16521,25 +16673,25 @@ do
 		callback = functions.teleportToSelected,
 	});
 
-	bruteSection:AddDivider('跟随');
+	bruteSection:AddDivider('吸附');
 
 	
 	bruteSection:AddList({
-		text = '跟随方式',
+		text = '吸附方式',
 		flag = 'Follow Mode',
 		values = { '背后', '天上', '地下' },
-		tip = '背后 = 贴在他身后；天上 = 待在他正上方；地下 = 待在他正下方',
+		tip = '背后 = 贴在他身后；天上 = 待在他正上方；地下 = 待在他正下方（吸附时自动坐椅子移动）',
 	});
 
 	bruteSection:AddToggle({
-		text = '跟随',
+		text = '吸附',
 		flag = 'Follow Player',
-		tip = '贴住选中玩家（自动开 noclip，朝向始终对着他，方便直接打）',
+		tip = '贴住选中玩家（自动坐椅子 + 开 noclip，朝向始终对着他，方便直接打）',
 		callback = functions.followPlayer,
 	});
 
 	bruteSection:AddSlider({
-		text = '跟随距离',
+		text = '吸附距离',
 		flag = 'Follow Distance',
 		value = 7,
 		min = -30,
@@ -16613,30 +16765,6 @@ do
 	});
 
 	parrySettingsSection:AddSlider({
-		text = '连按次数',
-		flag = 'Block Burst',
-		value = 1,
-		min = 1,
-		max = 5,
-		float = 1,
-		textpos = 2,
-		suffix = ' 次',
-		tip = '一次判定里重复激活格挡几次（1 = 关闭）；每次激活都可能重开弹反窗口',
-	});
-
-	parrySettingsSection:AddSlider({
-		text = '连按间隔',
-		flag = 'Block Burst Gap',
-		value = 40,
-		min = 20,
-		max = 120,
-		float = 5,
-		textpos = 2,
-		suffix = ' ms',
-		tip = '连按之间的间隔',
-	});
-
-	parrySettingsSection:AddSlider({
 		text = '格挡保持时长',
 		flag = 'Block Hold',
 		value = 130,
@@ -16670,6 +16798,13 @@ do
 		float = 0.05,
 		textpos = 2,
 		tip = '弹反音效音量',
+	});
+
+	parrySettingsSection:AddToggle({
+		text = '使用游戏公式',
+		flag = 'Use Base Timing',
+		state = true,
+		tip = '直接用游戏自己的命中时延算时机，不用学习数据。关掉才用实测学习的延迟；弹不到时优先试这个',
 	});
 
 	parrySettingsSection:AddToggle({
@@ -18243,6 +18378,7 @@ end;
 	
 	
 	local grappleDefaultApplied = false;
+	local timingMigrated = false;
 
 	task.spawn(function()
 		for _ = 1, 3600 do
@@ -18262,6 +18398,21 @@ end;
 					functions.autoParry(true);
 				end;
 			end);
+
+			
+			
+			
+			
+			if (not timingMigrated and getgenv().vairUiReady == true and library.hasInit == true) then
+				local compOpt = library.options.pingCompensation;
+
+				if (compOpt and type(compOpt.SetValue) == 'function'
+					and tonumber(library.flags.pingCompensation) == 50) then
+					pcall(function() compOpt:SetValue(100) end);
+				end;
+
+				timingMigrated = true;
+			end;
 
 			
 			
