@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 20:51:04
+    生成时间: 2026-11-01 20:58:45
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -885,15 +885,23 @@ do
         local tickboxOverlay
         if option.style then
             tickbox = library:Create('ImageLabel', {
-                AnchorPoint = Vector2.new(0, 0.5),
-                Position = UDim2.new(0, BOX_X, 0.5, 0),
-                Size = UDim2.fromOffset(BOX, BOX),
                 Active = false,
                 BackgroundTransparency = 1,
                 Image = 'rbxassetid://3570695787',
                 ImageColor3 = Color3.new(),
                 Parent = option.main
             })
+
+            
+            
+            if (TOUCH_UI) then
+                tickbox.AnchorPoint = Vector2.new(0, 0.5);
+                tickbox.Position = UDim2.new(0, BOX_X, 0.5, 0);
+                tickbox.Size = UDim2.fromOffset(BOX, BOX);
+            else
+                tickbox.Position = UDim2.new(0, 6, 0, 4);
+                tickbox.Size = UDim2.new(0, 12, 0, 12);
+            end;
 
             library:Create('ImageLabel', {
                 AnchorPoint = Vector2.new(0.5, 0.5),
@@ -939,14 +947,20 @@ do
             table.insert(library.theme, tickboxOverlay)
         else
             tickbox = library:Create('Frame', {
-                AnchorPoint = Vector2.new(0, 0.5),
-                Position = UDim2.new(0, BOX_X, 0.5, 0),
-                Size = UDim2.fromOffset(BOX, BOX),
                 Active = false,
                 BackgroundColor3 = library.flags.menuAccentColor,
                 BorderColor3 = Color3.new(),
                 Parent = option.main
             })
+
+            if (TOUCH_UI) then
+                tickbox.AnchorPoint = Vector2.new(0, 0.5);
+                tickbox.Position = UDim2.new(0, BOX_X, 0.5, 0);
+                tickbox.Size = UDim2.fromOffset(BOX, BOX);
+            else
+                tickbox.Position = UDim2.new(0, 6, 0, 4);
+                tickbox.Size = UDim2.new(0, 12, 0, 12);
+            end;
 
             tickboxOverlay = library:Create('ImageLabel', {
                 Size = UDim2.new(1, 0, 1, 0),
@@ -977,7 +991,7 @@ do
         
         option.interest = library:Create('TextButton', {
             Position = UDim2.new(0, 0, 0, 0),
-            Size = UDim2.new(1, 0, 0, ROW_H),
+            Size = UDim2.new(1, 0, 0, TOUCH_UI and ROW_H or 20),
             BackgroundTransparency = 1,
             AutoButtonColor = false,
             Active = true,
@@ -987,8 +1001,8 @@ do
         })
 
         option.title = library:Create('TextLabel', {
-            Position = UDim2.new(0, TEXT_X, 0, 0),
-            Size = UDim2.new(1, -TEXT_X, 1, 0),
+            Position = UDim2.new(0, 24, 0, 0),
+            Size = UDim2.new(1, 0, 1, 0),
             BackgroundTransparency = 1,
             Active = false,
             Text = option.text,
@@ -1086,9 +1100,6 @@ do
 
         
         option.title = library:Create('TextButton', {
-            AnchorPoint = Vector2.new(0.5, 0.5),
-            Position = UDim2.new(0.5, 0, 0.5, 0),
-            Size = UDim2.new(1, -12, 0, TOUCH_UI and 40 or 18),
             Active = true,
             Selectable = true,
             BackgroundColor3 = Palette.Elevated,
@@ -1100,6 +1111,17 @@ do
             AutoButtonColor = false,
             Parent = option.main
         })
+
+        
+        if (TOUCH_UI) then
+            option.title.AnchorPoint = Vector2.new(0.5, 0.5);
+            option.title.Position = UDim2.new(0.5, 0, 0.5, 0);
+            option.title.Size = UDim2.new(1, -12, 0, 40);
+        else
+            option.title.AnchorPoint = Vector2.new(0.5, 1);
+            option.title.Position = UDim2.new(0.5, 0, 1, -5);
+            option.title.Size = UDim2.new(1, -12, 0, 18);
+        end;
 
         if (option.sub) then
             if (not option.parent.subInit) then
@@ -16819,6 +16841,14 @@ do
 		local section = column:AddSection('版本更新');
 
 		local UPDATES = {
+			{
+				v = '1.1.165';
+				g = 'Gakuran';
+				at = '2026-11-01 21:30';
+				lines = {
+					'修复电脑端界面错位、控件重叠';
+				};
+			};
 			{
 				v = '1.1.164';
 				g = 'Gakuran';
