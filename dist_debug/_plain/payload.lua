@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 18:04:00
+    生成时间: 2026-11-01 18:08:36
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -10382,10 +10382,7 @@ do
 		
 		
 		
-		if (getFlag('useBaseTiming', true) == true) then
-			return baseDelay(info, character);
-		end;
-
+		
 		local primary = styleKeyOf(character, info);
 		local record = LEARNED[learnKey(character.Name, primary, info)];
 
@@ -10673,7 +10670,13 @@ do
 		end;
 
 		
-		if (not best or bestScore > 0.18) then return end;
+		
+		
+		if (not best) then return end;
+
+		local tolerance = math.max(0.2, (best.swing.base or 0.3) * 0.65);
+
+		if (bestScore > tolerance) then return end;
 
 		best.swing.used = true;
 
@@ -16461,10 +16464,11 @@ do
 
 		local UPDATES = {
 			{
-				v = '1.1.149';
+				v = '1.1.150';
 				g = 'Gakuran';
 				at = '2026-11-01 17:40';
 				lines = {
+					'弹反改为按实测延迟自动校准，不再依赖理论值';
 					'吸附时角色始终面朝目标，不再左右乱转';
 					'调试统计现在会显示被僵直拦下的次数';
 					'修复吸附悬停时上下晃动';
@@ -16971,13 +16975,6 @@ do
 		float = 0.05,
 		textpos = 2,
 		tip = '弹反音效音量',
-	});
-
-	parrySettingsSection:AddToggle({
-		text = '使用游戏公式',
-		flag = 'Use Base Timing',
-		state = true,
-		tip = '直接用游戏自己的命中时延算时机，不用学习数据。关掉才用实测学习的延迟；弹不到时优先试这个',
 	});
 
 	parrySettingsSection:AddToggle({
