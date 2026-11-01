@@ -1198,6 +1198,7 @@ do
 
         makeTooltip(interest, option);
 
+        
         library.unloadMaid:GiveTask(interest.InputEnded:connect(function(input)
             
             
@@ -1414,6 +1415,10 @@ do
                 LayoutOrder = option.position,
                 Size = UDim2.new(1, 0, 0, option.textpos and 24 or 40),
                 BackgroundTransparency = 1,
+                
+                
+                
+                Active = true,
                 Parent = parent
             })
         end
@@ -1423,6 +1428,7 @@ do
             Size = UDim2.new(1, -12, 0, 16),
             BackgroundColor3 = Palette.Elevated,
             BorderColor3 = Color3.new(),
+            Active = true,
             Parent = option.main
         })
 
@@ -1515,6 +1521,25 @@ do
         end));
 
         makeTooltip(interest, option);
+
+        
+        
+        
+        
+        
+        library.unloadMaid:GiveTask(interest.InputChanged:connect(function(input)
+            if (library.slider ~= option) then return end;
+            if (not isPrimaryMove(input)) then return end;
+
+            local bar = option.slider;
+
+            if (not bar or bar.AbsoluteSize.X <= 0) then return end;
+
+            local value = option.min + ((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X) * (option.max - option.min);
+
+            option:SetValue(value);
+        end));
+
 
         library.unloadMaid:GiveTask(interest.InputEnded:connect(function(input)
             if input.UserInputType.Name == 'MouseMovement' then
