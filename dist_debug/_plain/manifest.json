@@ -1,11 +1,11 @@
 {
-  "version": "1.1.98",
+  "version": "1.1.124",
   "chunks": [
     {
       "name": "01-core.lua",
       "file": "chunks/01-core.lua",
       "bytes": 156626,
-      "checksum": 483274542,
+      "checksum": 2581968267,
       "runtime": false
     },
     {
@@ -18,8 +18,8 @@
     {
       "name": "03-game.lua",
       "file": "chunks/03-game.lua",
-      "bytes": 653239,
-      "checksum": 245421555,
+      "bytes": 683878,
+      "checksum": 2615627569,
       "runtime": false
     },
     {
@@ -30,5 +30,5 @@
       "runtime": true
     }
   ],
-  "totalBytes": 960769
+  "totalBytes": 991408
 }

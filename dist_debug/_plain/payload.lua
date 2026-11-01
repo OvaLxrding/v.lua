@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 13:54:34
+    生成时间: 2026-11-01 16:32:46
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -8185,6 +8185,19 @@ local function buildGui()
 		end;
 	end);
 
+	
+	
+	
+	for _, parent in next, candidates do
+		pcall(function()
+			for _, child in next, parent:GetChildren() do
+				if (child:IsA('ScreenGui') and child.Name == 'VluaGakuranHud') then
+					child:Destroy();
+				end;
+			end;
+		end);
+	end;
+
 	gui = Instance.new('ScreenGui');
 	gui.Name = 'VluaGakuranHud';
 	gui.ResetOnSpawn = false;
@@ -9076,9 +9089,6 @@ local CONFIG = {
 	
 	learnTolerance = 0.25,
 
-	
-	comboHoldExtend = 0.45,
-	comboHoldMax = 2.2,
 };
 
 local functions = {};
@@ -9113,158 +9123,199 @@ local LEARNED_STYLE = {};
 
 local BUILTIN_ADAPTIVE = {
 	
-	scale = { player = 1.0177, playerN = 2, npc = 1.0177, npcN = 2 };
-	
+	scale = { player = 1.0376, playerN = 24, npc = 0.9194, npcN = 2 };
 	
 	learned = {
-		['aikido|M1|1'] = { d = 0.3448, n = 2 };
-		['aikido|M1|2'] = { d = 0.3261, n = 2 };
-		['aikido|M1|3'] = { d = 0.1670, n = 1 };
-		['aikido|M1|4'] = { d = 0.2332, n = 1 };
-		['aikido|M2|1'] = { d = 0.6272, n = 1 };
-		['ali|M1|1'] = { d = 0.4481, n = 1 };
-		['ali|M1|2'] = { d = 0.3677, n = 1 };
-		['ali|M1|3'] = { d = 0.4848, n = 1 };
-		['ali|M1|4'] = { d = 0.2122, n = 3 };
-		['ali|M2|1'] = { d = 0.5584, n = 1 };
-		['basic|M1|1'] = { d = 0.3542, n = 1 };
-		['basic|M1|2'] = { d = 0.3159, n = 3 };
-		['basic|M1|3'] = { d = 0.4841, n = 1 };
-		['basic|M1|4'] = { d = 0.3624, n = 1 };
-		['basic|M2|1'] = { d = 0.4146, n = 1 };
-		['boxing@awakened|M1|1'] = { d = 0.3175, n = 2 };
-		['boxing@awakened|M1|2'] = { d = 0.4245, n = 2 };
-		['boxing@awakened|M1|3'] = { d = 0.3067, n = 1 };
-		['boxing@awakened|M1|4'] = { d = 0.2758, n = 1 };
-		['boxing@awakened|M2|1|awakened'] = { d = 0.4178, n = 3 };
-		['boxing|M1|1'] = { d = 0.4232, n = 2 };
-		['boxing|M1|2'] = { d = 0.1976, n = 1 };
-		['boxing|M1|3'] = { d = 0.2670, n = 2 };
-		['boxing|M1|4'] = { d = 0.4710, n = 2 };
-		['boxing|M2|1'] = { d = 0.2962, n = 1 };
-		['capoeira|M1|1'] = { d = 0.3005, n = 1 };
-		['capoeira|M1|2'] = { d = 0.2996, n = 1 };
-		['capoeira|M1|3'] = { d = 0.4326, n = 1 };
-		['capoeira|M1|4'] = { d = 0.1605, n = 1 };
-		['capoeira|M2|1'] = { d = 0.5000, n = 2 };
-		['cqc|M1|1'] = { d = 0.3662, n = 9 };
-		['cqc|M1|2'] = { d = 0.3676, n = 5 };
-		['cqc|M1|3'] = { d = 0.2509, n = 5 };
-		['cqc|M1|4'] = { d = 0.4666, n = 2 };
-		['cqc|M2|1'] = { d = 0.4319, n = 3 };
-		['dragon|M1|1'] = { d = 0.3110, n = 8 };
-		['dragon|M1|2'] = { d = 0.3504, n = 3 };
+		['hakari|M1|4'] = { d = 0.4011, n = 1 };
+		['wrestling|M2|1'] = { d = 0.2367, n = 1 };
+		['boxing@awakened|M1|2'] = { d = 0.3339, n = 2 };
+		['boxing|M2|1'] = { d = 0.6334, n = 6 };
+		['slugger|M1|2'] = { d = 0.4858, n = 2 };
+		['karate|M2|1'] = { d = 0.5577, n = 4 };
+		['muaythai|M1|4'] = { d = 0.3277, n = 1 };
+		['striker|M2|1'] = { d = 0.5582, n = 4 };
+		['kyokushin|M1|2'] = { d = 0.3014, n = 5 };
+		['wrestling|M1|4'] = { d = 0.4027, n = 3 };
+		['taijutsu|M1|1'] = { d = 0.2844, n = 3 };
+		['boxing@awakened|M1|4'] = { d = 0.3676, n = 1 };
+		['muaythai|M1|1'] = { d = 0.3762, n = 5 };
+		['lethwei@awakened|M1|3'] = { d = 0.4751, n = 2 };
+		['kure@awakened|M1|2'] = { d = 0.3502, n = 2 };
+		['wingchun|M1|4'] = { d = 0.6986, n = 8 };
+		['boxing@awakened|M1|1'] = { d = 0.2076, n = 1 };
+		['striker|M1|2'] = { d = 0.3758, n = 10 };
+		['muaythai@awakened|M1|4'] = { d = 0.3347, n = 9 };
+		['dragon|M1|1'] = { d = 0.4324, n = 1 };
+		['taijutsu@awakened|M1|1'] = { d = 0.2009, n = 1 };
+		['hakari@awakened|M1|2'] = { d = 0.5009, n = 1 };
+		['kure|M1|1'] = { d = 0.3638, n = 12 };
+		['taijutsu@awakened|M2|1|awakened'] = { d = 0.8735, n = 2 };
+		['taijutsu@awakened|M1|2'] = { d = 0.3067, n = 2 };
+		['kickboxing|M1|2'] = { d = 0.3150, n = 12 };
+		['hikaken|M1|4'] = { d = 0.4968, n = 1 };
+		['lethwei@awakened|M2|2|awakened'] = { d = 0.5585, n = 2 };
+		['jin@awakened|M2|1|awakened'] = { d = 0.6592, n = 2 };
+		['lethwei@awakened|M2|1|awakened'] = { d = 0.4509, n = 2 };
+		['hakari|M1|1'] = { d = 0.3814, n = 1 };
+		['taijutsu|M1|2'] = { d = 0.1461, n = 1 };
+		['hikaken|M1|3'] = { d = 0.2835, n = 6 };
+		['hakari|M1|3'] = { d = 0.2998, n = 3 };
+		['striker|M1|3'] = { d = 0.1745, n = 4 };
+		['cqc@awakened|M1|1'] = { d = 0.4172, n = 1 };
+		['lethwei|M1|1'] = { d = 0.4730, n = 1 };
+		['wrestling@awakened|M1|3'] = { d = 0.3834, n = 5 };
+		['kickboxing|M1|4'] = { d = 0.7105, n = 12 };
+		['mishima|M1|2'] = { d = 0.1820, n = 2 };
+		['capoeira|M1|4'] = { d = 0.2919, n = 2 };
+		['basic|M1|1'] = { d = 0.3169, n = 5 };
+		['cqc|M1|1'] = { d = 0.4504, n = 6 };
+		['aikido|M1|4'] = { d = 0.3347, n = 2 };
+		['muaythai|M1|3'] = { d = 0.3584, n = 2 };
 		['dragon|M1|3'] = { d = 0.2835, n = 3 };
+		['muaythai|M1|2'] = { d = 0.3336, n = 1 };
+		['wrestling@awakened|M1|4'] = { d = 0.3717, n = 5 };
+		['jason|M2|1'] = { d = 0.2386, n = 2 };
+		['boxing@awakened|M1|3'] = { d = 0.3067, n = 1 };
+		['cqc|M2|1'] = { d = 0.5157, n = 2 };
+		['taijutsu@awakened|M1|3'] = { d = 0.5052, n = 1 };
+		['ali|M2|1'] = { d = 0.5024, n = 8 };
+		['jason|M1|3'] = { d = 0.3342, n = 1 };
+		['scarecrow|M1|2'] = { d = 0.5015, n = 1 };
+		['giovanna|M1|4'] = { d = 0.4601, n = 2 };
+		['kickboxing|M1|1'] = { d = 0.3345, n = 12 };
+		['capoeira|M1|1'] = { d = 0.3429, n = 1 };
+		['boxing|M1|2'] = { d = 0.3034, n = 1 };
+		['kyokushin@awakened|M1|1'] = { d = 0.2686, n = 2 };
+		['wrestling@awakened|M1|2'] = { d = 0.3267, n = 12 };
+		['muaythai@awakened|M2|1|awakened'] = { d = 0.2917, n = 2 };
+		['jin@awakened|M1|3'] = { d = 0.4026, n = 2 };
+		['hakari@awakened|M2|1|awakened'] = { d = 0.5515, n = 1 };
+		['wingchun|M1|3'] = { d = 0.3010, n = 1 };
+		['kickboxing@awakened|M1|1'] = { d = 0.3001, n = 1 };
+		['karate|M1|3'] = { d = 0.4054, n = 6 };
+		['wrestling@awakened|M2|1|awakened'] = { d = 0.4020, n = 1 };
+		['perfectcopy|M1|4'] = { d = 0.2010, n = 1 };
+		['kyokushin@awakened|M1|4'] = { d = 0.6343, n = 1 };
+		['basic|M1|3'] = { d = 0.3420, n = 4 };
+		['karate@awakened|M1|4'] = { d = 0.6482, n = 1 };
+		['striker@awakened|M1|4'] = { d = 0.1502, n = 3 };
+		['scarecrow|M1|3'] = { d = 0.4672, n = 2 };
+		['kickboxing@awakened|M1|2'] = { d = 0.3351, n = 1 };
+		['lethwei|M2|1'] = { d = 0.4333, n = 3 };
+		['striker@awakened|M1|1'] = { d = 0.3830, n = 1 };
+		['taijutsu|M1|3'] = { d = 0.3346, n = 5 };
+		['kickboxing|M2|1'] = { d = 0.3152, n = 2 };
+		['jason|M1|4'] = { d = 0.4332, n = 1 };
+		['lethwei@awakened|M1|4'] = { d = 0.2961, n = 1 };
+		['hakari@awakened|M1|1'] = { d = 0.3800, n = 7 };
+		['jin@awakened|M1|4'] = { d = 0.5521, n = 1 };
+		['kyokushin@awakened|M1|3'] = { d = 0.3352, n = 1 };
+		['perfectcopy|M1|2'] = { d = 0.2009, n = 1 };
+		['basic|M2|1'] = { d = 0.4836, n = 2 };
+		['mishima|M1|4'] = { d = 0.3826, n = 4 };
+		['striker@awakened|M1|3'] = { d = 0.2282, n = 2 };
+		['cqc|M1|4'] = { d = 0.4854, n = 5 };
+		['ali|M1|3'] = { d = 0.3928, n = 2 };
+		['striker@awakened|M2|1|awakened'] = { d = 0.8345, n = 1 };
+		['giovanna|M1|1'] = { d = 0.4435, n = 3 };
+		['mishima|M2|1'] = { d = 0.3832, n = 1 };
+		['kyokushin@awakened|M2|1|awakened'] = { d = 0.2805, n = 5 };
+		['lethwei|M1|4'] = { d = 0.4404, n = 2 };
+		['kyokushin|M1|3'] = { d = 0.3337, n = 5 };
+		['lethwei@awakened|M1|1'] = { d = 0.4727, n = 2 };
+		['ali|M1|4'] = { d = 0.2686, n = 1 };
+		['kyokushin|M1|4'] = { d = 0.4508, n = 2 };
+		['hikaken|M2|1'] = { d = 0.2331, n = 6 };
+		['perfectcopy|M1|3'] = { d = 0.3779, n = 1 };
+		['scarecrow|M1|1'] = { d = 0.3851, n = 1 };
+		['aikido|M1|3'] = { d = 0.3547, n = 2 };
+		['giovanna|M1|2'] = { d = 0.3767, n = 1 };
+		['kyokushin|M2|1'] = { d = 0.7356, n = 3 };
+		['kure@awakened|M1|3'] = { d = 0.3196, n = 2 };
+		['cqc@awakened|M1|2'] = { d = 0.4328, n = 1 };
+		['karate@awakened|M2|1|awakened'] = { d = 0.3368, n = 1 };
+		['kure@awakened|M1|4'] = { d = 0.3434, n = 2 };
+		['perfectcopy|M1|1'] = { d = 0.4664, n = 1 };
+		['boxing|M1|4'] = { d = 0.3992, n = 1 };
+		['jason|M1|1'] = { d = 0.4001, n = 4 };
+		['kure@awakened|M1|1'] = { d = 0.3492, n = 1 };
 		['dragon|M1|4'] = { d = 0.3351, n = 3 };
-		['dragon|M2|1'] = { d = 0.6344, n = 1 };
-		['giovanna|M1|1'] = { d = 0.4642, n = 1 };
-		['giovanna|M1|2'] = { d = 0.3886, n = 1 };
-		['giovanna|M1|3'] = { d = 0.2661, n = 4 };
-		['giovanna|M1|4'] = { d = 0.4659, n = 5 };
-		['giovanna|M2|1'] = { d = 0.4266, n = 3 };
-		['hakari@awakened|M1|1'] = { d = 0.3182, n = 9 };
-		['hakari@awakened|M1|2'] = { d = 0.3282, n = 7 };
-		['hakari@awakened|M1|3'] = { d = 0.2137, n = 4 };
-		['hakari@awakened|M1|4'] = { d = 0.4351, n = 1 };
-		['hakari@awakened|M2|1'] = { d = 0.2897, n = 1 };
-		['hakari|M1|1'] = { d = 0.3330, n = 10 };
-		['hakari|M1|2'] = { d = 0.3435, n = 1 };
-		['hakari|M1|3'] = { d = 0.2341, n = 4 };
-		['hakari|M1|4'] = { d = 0.3508, n = 5 };
-		['hakari|M2|1'] = { d = 0.4091, n = 5 };
-		['hikaken|M1|1'] = { d = 0.1523, n = 1 };
-		['hikaken|M1|2'] = { d = 0.3158, n = 1 };
-		['hikaken|M1|3'] = { d = 0.3165, n = 1 };
-		['hikaken|M1|4'] = { d = 0.2504, n = 1 };
-		['hikaken|M2|1'] = { d = 0.2838, n = 3 };
-		['jin@awakened|M1|1'] = { d = 0.2500, n = 1 };
-		['jin@awakened|M1|2'] = { d = 0.5494, n = 1 };
-		['jin@awakened|M1|3'] = { d = 0.4423, n = 1 };
-		['jin@awakened|M1|4'] = { d = 0.4495, n = 1 };
-		['karate@awakened|M1|1'] = { d = 0.3235, n = 12 };
-		['karate@awakened|M1|2'] = { d = 0.3503, n = 12 };
-		['karate@awakened|M1|3'] = { d = 0.3969, n = 8 };
-		['karate|M1|1'] = { d = 0.3416, n = 4 };
-		['karate|M1|2'] = { d = 0.3992, n = 1 };
-		['karate|M1|3'] = { d = 0.5938, n = 1 };
-		['karate|M1|4'] = { d = 0.5269, n = 1 };
-		['karate|M2|1'] = { d = 0.4991, n = 1 };
-		['kickboxing|M1|1'] = { d = 0.2487, n = 1 };
-		['kickboxing|M1|2'] = { d = 0.3672, n = 1 };
-		['kickboxing|M1|3'] = { d = 0.4509, n = 1 };
-		['kickboxing|M1|4'] = { d = 0.5322, n = 1 };
-		['kickboxing|M2|1'] = { d = 0.3009, n = 1 };
-		['kure|M1|1'] = { d = 0.3170, n = 1 };
-		['kure|M1|2'] = { d = 0.3245, n = 1 };
-		['kure|M1|3'] = { d = 0.2619, n = 1 };
-		['kure|M1|4'] = { d = 0.3669, n = 1 };
-		['kure|M2|1'] = { d = 0.2634, n = 1 };
-		['kyokushin|M1|1'] = { d = 0.3323, n = 1 };
-		['kyokushin|M1|2'] = { d = 0.3001, n = 1 };
-		['kyokushin|M2|1'] = { d = 0.7571, n = 1 };
-		['lethwei|M1|1'] = { d = 0.5416, n = 12 };
-		['lethwei|M1|2'] = { d = 0.5002, n = 12 };
-		['lethwei|M1|3'] = { d = 0.3994, n = 9 };
-		['lethwei|M1|4'] = { d = 0.4174, n = 1 };
-		['lethwei|M2|1'] = { d = 0.4834, n = 5 };
-		['mishima|M1|1'] = { d = 0.2349, n = 1 };
-		['mishima|M1|2'] = { d = 0.2856, n = 1 };
-		['mishima|M1|3'] = { d = 0.3679, n = 1 };
-		['mishima|M1|4'] = { d = 0.4979, n = 1 };
-		['mishima|M2|1'] = { d = 0.3600, n = 2 };
-		['muaythai@awakened|M1|1'] = { d = 0.3362, n = 1 };
-		['muaythai@awakened|M1|2'] = { d = 0.2348, n = 1 };
-		['muaythai@awakened|M1|3'] = { d = 0.3504, n = 1 };
-		['muaythai@awakened|M1|4'] = { d = 0.2801, n = 5 };
-		['muaythai|M1|1'] = { d = 0.3457, n = 12 };
-		['muaythai|M1|2'] = { d = 0.3193, n = 12 };
-		['muaythai|M1|3'] = { d = 0.3368, n = 12 };
-		['muaythai|M1|4'] = { d = 0.3303, n = 9 };
-		['muaythai|M2|1'] = { d = 0.5891, n = 9 };
-		['perfectcopy|M1|1'] = { d = 0.3014, n = 2 };
-		['perfectcopy|M1|2'] = { d = 0.2330, n = 12 };
-		['perfectcopy|M1|3'] = { d = 0.3179, n = 1 };
-		['perfectcopy|M1|4'] = { d = 0.2009, n = 1 };
-		['perfectcopy|M2|1'] = { d = 0.5015, n = 1 };
-		['slugger|M1|1'] = { d = 0.5049, n = 1 };
-		['slugger|M1|2'] = { d = 0.4194, n = 1 };
-		['slugger|M1|3'] = { d = 0.4060, n = 3 };
-		['slugger|M1|4'] = { d = 0.3150, n = 1 };
+		['striker@awakened|M1|2'] = { d = 0.3174, n = 2 };
+		['hakari|M2|1'] = { d = 0.3522, n = 1 };
+		['lethwei@awakened|M1|2'] = { d = 0.5095, n = 2 };
+		['striker|M1|1'] = { d = 0.4170, n = 12 };
+		['hakari|M1|2'] = { d = 0.3846, n = 5 };
+		['kyokushin@awakened|M1|2'] = { d = 0.3339, n = 1 };
+		['boxing|M1|3'] = { d = 0.4009, n = 3 };
+		['dragon|M1|2'] = { d = 0.3504, n = 3 };
+		['hakari@awakened|M1|4'] = { d = 0.4753, n = 2 };
+		['hikaken|M1|1'] = { d = 0.2363, n = 1 };
+		['boxing@awakened|M2|1|awakened'] = { d = 0.3861, n = 1 };
+		['wingchun|M1|1'] = { d = 0.3004, n = 1 };
+		['kure|M1|3'] = { d = 0.3087, n = 2 };
+		['kure|M1|2'] = { d = 0.3507, n = 5 };
+		['capoeira|M1|2'] = { d = 0.4001, n = 1 };
+		['capoeira|M2|1'] = { d = 0.4844, n = 1 };
+		['karate@awakened|M1|1'] = { d = 0.3634, n = 5 };
+		['wrestling|M1|2'] = { d = 0.3327, n = 12 };
+		['jin@awakened|M1|1'] = { d = 0.2960, n = 3 };
+		['lethwei|M1|3'] = { d = 0.4017, n = 1 };
+		['cqc|M1|3'] = { d = 0.3120, n = 7 };
+		['karate|M1|2'] = { d = 0.3639, n = 4 };
+		['wingchun|M1|2'] = { d = 0.3000, n = 1 };
+		['giovanna|M1|3'] = { d = 0.1936, n = 2 };
+		['wrestling@awakened|M1|1'] = { d = 0.2736, n = 12 };
+		['giovanna|M2|1'] = { d = 0.4375, n = 2 };
+		['mishima|M1|1'] = { d = 0.2268, n = 2 };
 		['slugger|M2|1'] = { d = 0.8354, n = 1 };
-		['striker|M1|1'] = { d = 0.3490, n = 8 };
-		['striker|M1|2'] = { d = 0.3408, n = 5 };
-		['striker|M1|3'] = { d = 0.2359, n = 5 };
-		['striker|M1|4'] = { d = 0.1346, n = 4 };
-		['striker|M2|1'] = { d = 0.4457, n = 1 };
-		['taijutsu@awakened|M1|1'] = { d = 0.1992, n = 4 };
-		['taijutsu@awakened|M1|2'] = { d = 0.3011, n = 2 };
-		['taijutsu@awakened|M1|3'] = { d = 0.3017, n = 5 };
-		['taijutsu@awakened|M1|4'] = { d = 0.2920, n = 2 };
-		['taijutsu|M1|1'] = { d = 0.2339, n = 5 };
-		['taijutsu|M1|2'] = { d = 0.2846, n = 1 };
-		['taijutsu|M1|3'] = { d = 0.5002, n = 1 };
-		['taijutsu|M1|4'] = { d = 0.1663, n = 1 };
-		['taijutsu|M2|1'] = { d = 0.5521, n = 1 };
-		['wingchun|M1|1'] = { d = 0.1756, n = 1 };
-		['wingchun|M1|2'] = { d = 0.3487, n = 11 };
-		['wingchun|M1|3'] = { d = 0.3371, n = 1 };
-		['wingchun|M1|4'] = { d = 0.7655, n = 1 };
-		['wingchun|M2|1'] = { d = 0.5487, n = 1 };
-		['wrestling@awakened|M1|1'] = { d = 0.2876, n = 11 };
-		['wrestling@awakened|M1|2'] = { d = 0.3683, n = 1 };
-		['wrestling@awakened|M1|3'] = { d = 0.3493, n = 3 };
-		['wrestling@awakened|M1|4'] = { d = 0.4843, n = 1 };
-		['wrestling|M1|1'] = { d = 0.2765, n = 2 };
-		['wrestling|M1|2'] = { d = 0.3345, n = 1 };
-		['wrestling|M1|3'] = { d = 0.3679, n = 1 };
-		['wrestling|M1|4'] = { d = 0.3669, n = 5 };
-		['wrestling|M2|1'] = { d = 0.2637, n = 2 };
+		['hikaken|M1|2'] = { d = 0.2325, n = 1 };
+		['ali|M1|1'] = { d = 0.2764, n = 12 };
+		['karate@awakened|M1|2'] = { d = 0.5008, n = 1 };
+		['jin@awakened|M1|2'] = { d = 0.5495, n = 3 };
+		['hakari@awakened|M2|1'] = { d = 0.5048, n = 1 };
+		['capoeira|M1|3'] = { d = 0.4557, n = 1 };
+		['karate@awakened|M1|3'] = { d = 0.4364, n = 1 };
+		['taijutsu|M1|4'] = { d = 0.2587, n = 3 };
+		['kure|M1|4'] = { d = 0.4902, n = 3 };
+		['karate|M1|1'] = { d = 0.3165, n = 7 };
+		['mishima|M1|3'] = { d = 0.2970, n = 2 };
+		['boxing|M1|1'] = { d = 0.2995, n = 1 };
+		['slugger|M1|4'] = { d = 0.3321, n = 1 };
+		['jason|M1|2'] = { d = 0.4476, n = 1 };
+		['karate|M1|4'] = { d = 0.6325, n = 1 };
+		['wrestling|M1|1'] = { d = 0.2710, n = 12 };
+		['kickboxing|M1|3'] = { d = 0.4505, n = 12 };
+		['basic|M1|4'] = { d = 0.3115, n = 3 };
+		['hakari@awakened|M1|3'] = { d = 0.3005, n = 1 };
+		['kyokushin|M1|1'] = { d = 0.2345, n = 5 };
+		['lethwei|M1|2'] = { d = 0.4841, n = 2 };
+		['dragon|M2|1'] = { d = 0.6344, n = 1 };
+		['scarecrow|M1|4'] = { d = 0.4174, n = 1 };
+		['muaythai@awakened|M1|1'] = { d = 0.3925, n = 4 };
+		['aikido|M1|1'] = { d = 0.3494, n = 3 };
+		['muaythai@awakened|M1|2'] = { d = 0.3586, n = 2 };
+		['muaythai@awakened|M1|3'] = { d = 0.3491, n = 9 };
+		['muaythai|M2|1'] = { d = 0.6134, n = 1 };
+		['kure@awakened|M2|1|awakened'] = { d = 0.1993, n = 2 };
+		['ali|M1|2'] = { d = 0.3365, n = 8 };
+		['slugger|M1|3'] = { d = 0.3826, n = 1 };
+		['slugger|M1|1'] = { d = 0.4927, n = 2 };
+		['perfectcopy|M2|1'] = { d = 0.4979, n = 1 };
+		['cqc|M1|2'] = { d = 0.4309, n = 12 };
+		['kure|M2|1'] = { d = 0.3106, n = 3 };
+		['striker|M1|4'] = { d = 0.2086, n = 4 };
+		['aikido|M2|1'] = { d = 0.5498, n = 6 };
+		['wingchun|M2|1'] = { d = 0.5498, n = 3 };
+		['basic|M1|2'] = { d = 0.3230, n = 4 };
+		['taijutsu|M2|1'] = { d = 0.6071, n = 1 };
+		['taijutsu@awakened|M1|4'] = { d = 0.3103, n = 2 };
+		['aikido|M1|2'] = { d = 0.3331, n = 5 };
+		['wrestling|M1|3'] = { d = 0.3651, n = 8 };
 	};
-	
 	
 	lead = {
 		['40'] = { win = 1, n = 15 };
-		['62'] = { win = 224, n = 752 };
+		['62'] = { win = 300, n = 1130 };
 		['50'] = { win = 5, n = 31 };
 		['86'] = { win = 2, n = 15 };
 		['74'] = { win = 8, n = 48 };
@@ -9406,11 +9457,19 @@ local lastScheduleAt = 0;
 
 
 
+
+local autoParryForceStance = false;
+
+
+
+
+local autoParryActive = false;
+
+
+
 local blockHoldUntil = 0;
 local blockSeq = 0;
 
-
-local comboUntil = 0;
 local lastSkip = nil;
 
 
@@ -9655,6 +9714,7 @@ local function loadLeadStats()
 	
 	
 	local scaleSeed = 1.0;
+	local npcScaleSeed = 1.0;
 
 	if (type(adaptive) == 'table' and type(adaptive.scale) == 'table') then
 		local stored = tonumber(adaptive.scale.player);
@@ -9662,14 +9722,41 @@ local function loadLeadStats()
 		if (stored and stored > 0.5 and stored < 1.5) then
 			scaleSeed = stored;
 		end;
+
+		
+		
+		
+		local storedNpc = tonumber(adaptive.scale.npc);
+
+		
+		
+		if (storedNpc and storedNpc == tonumber(adaptive.scale.player)) then
+			storedNpc = nil;
+		end;
+
+		if (storedNpc and storedNpc > 0.5 and storedNpc < 1.5) then
+			npcScaleSeed = storedNpc;
+		else
+			
+			local builtinNpc = type(BUILTIN_ADAPTIVE.scale) == 'table'
+				and tonumber(BUILTIN_ADAPTIVE.scale.npc);
+
+			if (builtinNpc and builtinNpc > 0.5 and builtinNpc < 1.5) then
+				npcScaleSeed = builtinNpc;
+			else
+				npcScaleSeed = scaleSeed;
+			end;
+		end;
+	else
+		npcScaleSeed = scaleSeed;
 	end;
 
 	SCALE.player.s = scaleSeed;
 	SCALE.player.samples = { scaleSeed, scaleSeed };
 	SCALE.player.n = 2;
 
-	SCALE.npc.s = scaleSeed;
-	SCALE.npc.samples = { scaleSeed, scaleSeed };
+	SCALE.npc.s = npcScaleSeed;
+	SCALE.npc.samples = { npcScaleSeed, npcScaleSeed };
 	SCALE.npc.n = 2;
 
 	
@@ -9983,6 +10070,16 @@ do
 			return 0;
 		end;
 
+		
+		
+		
+		local function isResultAnim(n)
+			return n:sub(-4) == 'EHit'
+				or n:sub(-7) == 'Success'
+				or n:sub(-4) == 'Miss'
+				or n:sub(-6) == 'Victim';
+		end;
+
 		local function register(animation, style, kind, combo, variant)
 			if (not kind) then return end;
 
@@ -10018,9 +10115,9 @@ do
 				if (animationName:find('M1$')) then
 					kind = 'M1';
 					combo = tonumber(animationName:match('^(%d)')) or 1;
-				elseif (animationName:find('M2$')) then
+				elseif (not isResultAnim(animationName) and animationName:find('M2')) then
 					kind = 'M2';
-					combo = 1;
+					combo = animationName:find('Part2') and 2 or 1;
 				end;
 
 				register(animation, style, kind, combo, '');
@@ -10789,11 +10886,44 @@ do
 			EvasiveModule.Evasive();
 		end);
 
-		if (getFlag('debugLog', false)) then
-			log('DODGE %s ok=%s', tostring(reason), tostring(ok));
+		if (not ok) then return false end;
+
+		
+		
+		
+		local confirmed = false;
+
+		if (type(EvasiveModule.IsDashActive) == 'function') then
+			for _ = 1, 3 do
+				local okActive, active = pcall(EvasiveModule.IsDashActive);
+
+				if (okActive and active == true) then
+					confirmed = true;
+					break;
+				end;
+
+				task.wait(0.02);
+			end;
+		else
+			confirmed = true;
 		end;
 
-		return ok;
+		if (getFlag('debugLog', false)) then
+			log('DODGE %s 调用=%s 确认=%s', tostring(reason), tostring(ok), tostring(confirmed));
+		end;
+
+		return confirmed;
+	end;
+
+	
+	
+	
+	function grappleKey(style, variant)
+		if (variant == 'awakened') then
+			return tostring(style) .. ' (觉醒)';
+		end;
+
+		return tostring(style);
 	end;
 
 	
@@ -10802,7 +10932,9 @@ do
 
 		local selected = library.flags.grappleStyles;
 
-		return type(selected) == 'table' and selected[info.style] == true;
+		if (type(selected) ~= 'table') then return false end;
+
+		return selected[grappleKey(info.style, info.variant)] == true;
 	end;
 
 	
@@ -10830,7 +10962,9 @@ do
 		
 		
 		if (isSelfAttacking()) then
-			noteSkip('selfatk');
+			
+			
+			
 
 			
 			
@@ -10849,7 +10983,14 @@ do
 			
 			
 			
+
+			
+			
+			
 			if (not (getFlag('selfAttackBlock', false) or autoParryForcedSelfBlock)) then
+				
+				noteSkip('selfatk');
+
 				requestQueuedParry();
 
 				return false;
@@ -11015,13 +11156,6 @@ do
 					if (blockSeq ~= mySeq) then return end;
 					if (not isEnabled()) then return end;
 
-					
-					if (getFlag('comboHold', false) and os.clock() < comboUntil) then
-						blockHoldUntil = os.clock() + holdSeconds;
-
-						continue;
-					end;
-
 					if (os.clock() < blockHoldUntil) then continue end;
 
 					releaseBlock('AutoParryRelease');
@@ -11080,7 +11214,7 @@ do
 	end;
 
 	function ensureStance()
-		if (not getFlag('autoStance', true) or not EquipModule) then return end;
+		if ((not getFlag('autoStance', true) and not autoParryForceStance) or not EquipModule) then return end;
 
 		local character = myChar();
 
@@ -11520,13 +11654,6 @@ do
 			return;
 		end;
 
-		
-		if (getFlag('comboHold', false)) then
-			local now = os.clock();
-
-			comboUntil = math.min(now + CONFIG.comboHoldExtend, now + CONFIG.comboHoldMax);
-		end;
-
 		local myRoot = myRootPart();
 		local theirRoot = character:FindFirstChild('HumanoidRootPart');
 
@@ -11553,7 +11680,10 @@ do
 
 		
 		
-		if (not panic and getFlag('faceTarget', false)) then
+		
+		
+		
+		if (not panic and (getFlag('faceTarget', true) or getFlag('requireFacing', true))) then
 			faceTarget(theirRoot);
 		end;
 
@@ -11862,7 +11992,13 @@ do
 		if (not (ANIM[animationId] or CONFIG.animOverride[animationId])) then return end;
 
 		selfAttackTrack = track;
-		selfAttackUntil = os.clock() + math.max(track.Length or 0.4, 0.2);
+
+		
+		
+		
+		selfAttackUntil = os.clock() + math.min(math.max(track.Length or 0.4, 0.2), 1.2);
+
+		getgenv().__gakuranLastSelfAtkId = animationId;
 
 		
 		local animInfo = ANIM[animationId] or CONFIG.animOverride[animationId];
@@ -12158,6 +12294,9 @@ end;
 do 
 	function functions.autoParry(toggle)
 		if (not toggle) then
+			autoParryActive = false;
+			autoParryForceStance = false;
+
 			
 			if (autoParryForcedCooldown) then
 				autoParryForcedCooldown = false;
@@ -12191,7 +12330,6 @@ do
 
 		
 		
-		
 		if (library.flags.noParryCooldown ~= true) then
 			autoParryForcedCooldown = true;
 
@@ -12199,9 +12337,16 @@ do
 		end;
 
 		
+		if (autoParryActive) then return end;
+
+		
+
+		
 		if (library.flags.selfAttackBlock ~= true) then
 			autoParryForcedSelfBlock = true;
 		end;
+
+		autoParryForceStance = true;
 
 		table.clear(recentSwings);
 		table.clear(OBS.swings);
@@ -12218,7 +12363,7 @@ do
 
 		maid.stanceLoop = RunService.Heartbeat:Connect(function()
 			if (not isEnabled()) then return end;
-			if (not getFlag('autoStance', true)) then return end;
+			if (not getFlag('autoStance', true) and not autoParryForceStance) then return end;
 
 			local now = os.clock();
 
@@ -12230,6 +12375,8 @@ do
 		end);
 
 		hookAll();
+
+		autoParryActive = true;
 
 		log('Auto Parry 已启动：动画 %d 个，监听角色 %d 个', ANIM_COUNT, countTable(watched));
 
@@ -12428,9 +12575,22 @@ do
 
 		local text = table.concat(lines, '\n');
 
+		
+		
+		
+		getgenv().__gakuranStatsText = text;
+
+		pcall(function()
+			if (type(setclipboard) == 'function') then
+				setclipboard(text);
+			end;
+		end);
+
 		print('[Gakuran]\n' .. text);
 
-		
+		pcall(function()
+			library:ShowMessage(text);
+		end);
 	end;
 
 	function functions.rebuildAnimMap()
@@ -15424,8 +15584,29 @@ do
 
 				if (not (anonSelf or anonOther)) then return end;
 
-				task.defer(function()
+				
+				
+				
+				task.spawn(function()
+					local deadline = os.clock() + 10;
+
+					while (character.Parent == nil and os.clock() < deadline) do
+						task.wait(0.1);
+					end;
+
+					if (not (anonSelf or anonOther)) then return end;
+
 					if (character.Parent) then
+						pcall(applyPlayer, player);
+					end;
+
+					
+					for _ = 1, 8 do
+						task.wait(0.5);
+
+						if (not (anonSelf or anonOther)) then return end;
+						if (character.Parent == nil) then return end;
+
 						pcall(applyPlayer, player);
 					end;
 				end);
@@ -15965,6 +16146,74 @@ do
 
 		local UPDATES = {
 			{
+				v = '1.1.124';
+				g = 'Gakuran';
+				at = '2026-11-01 16:12';
+				lines = {
+					'修复抓取流派设置加载后被覆盖';
+					'修复重载后旧功能实例继续运行';
+				};
+			};
+			{
+				v = '1.1.121';
+				g = 'Gakuran';
+				at = '2026-11-01 15:40';
+				lines = {
+					'优化弹反判定数据，弹得更准';
+					'修正玩家与敌人的判定比例';
+				};
+			};
+			{
+				v = '1.1.118';
+				g = 'Gakuran';
+				at = '2026-11-01 15:15';
+				lines = {
+					'修复被连击时弹反不出来';
+				};
+			};
+			{
+				v = '1.1.117';
+				g = 'Gakuran';
+				at = '2026-11-01 15:00';
+				lines = {
+					'修复匿名模式死亡后恢复原名';
+					'修复血量体力面板重影';
+				};
+			};
+			{
+				v = '1.1.111';
+				g = 'Gakuran';
+				at = '2026-11-01 14:45';
+				lines = {
+					'抓取后撤支持区分觉醒流派';
+				};
+			};
+			{
+				v = '1.1.107';
+				g = 'Gakuran';
+				at = '2026-11-01 14:20';
+				lines = {
+					'修复自动弹反偶尔完全不生效';
+				};
+			};
+			{
+				v = '1.1.105';
+				g = 'Gakuran';
+				at = '2026-11-01 14:00';
+				lines = {
+					'调试统计改为界面显示';
+				};
+			};
+			{
+				v = '1.1.100';
+				g = 'Gakuran';
+				at = '2026-11-01 14:20';
+				lines = {
+					'移除连段保持';
+					'补全攻击动画表，修复部分招式无法弹反';
+				};
+			};
+			{
 				v = '1.1.98';
 				g = 'Gakuran';
 				at = '2026-11-01 14:05';
@@ -16456,12 +16705,6 @@ do
 	});
 
 	parrySettingsSection:AddToggle({
-		text = '连段保持',
-		flag = 'Combo Hold',
-		tip = '对方连招没打完就一直举着格挡，等连段结束再松手，不在连招中间反复重按',
-	});
-
-	parrySettingsSection:AddToggle({
 		text = '抓取后撤',
 		flag = 'Grapple Aware',
 		tip = '识别到勾选流派的 M2（抓取）时直接后撤，而不是硬接',
@@ -16469,10 +16712,23 @@ do
 
 	do
 		local styleList = {};
+		local seenKey = {};
 
+		local function addStyle(name)
+			if (not seenKey[name]) then
+				seenKey[name] = true;
+				table.insert(styleList, name);
+			end;
+		end;
+
+		
 		for _, entry in next, ANIM do
-			if (entry.style and not table.find(styleList, entry.style)) then
-				table.insert(styleList, entry.style);
+			if (entry.style) then
+				if (entry.variant == 'awakened') then
+					addStyle(entry.style .. ' (觉醒)');
+				else
+					addStyle(entry.style);
+				end;
 			end;
 		end;
 
@@ -16483,20 +16739,11 @@ do
 			flag = 'Grapple Styles',
 			values = styleList,
 			multiselect = true,
-			tip = '勾选哪些流派的 M2 算抓取（默认勾上 boxing）',
+			tip = '勾选哪些流派(形态)的 M2 是抓取 —— 格挡无效、必须闪避。默认：摔跤 / 觉醒摔跤 / 觉醒泰拳 / 完美复制',
 		});
 
-		if (grappleStyles and type(grappleStyles.SetValue) == 'function' and type(library.flags.grappleStyles) ~= 'table') then
-			local initial = {};
-
-			for _, name in next, styleList do
-				initial[name] = (name == 'boxing');
-			end;
-
-			pcall(function()
-				grappleStyles:SetValue(initial);
-			end);
-		end;
+		
+		
 	end;
 
 	parrySettingsSection:AddToggle({
@@ -17982,6 +18229,100 @@ end;
 
 	
 	pcall(Hud.setEnabled, getFlag('showHpStamina', true));
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	local grappleDefaultApplied = false;
+
+	task.spawn(function()
+		for _ = 1, 3600 do
+			task.wait(1);
+
+			
+			if (isStale()) then return end;
+
+			pcall(function()
+				if (getFlag('enableAutoParry', false) == true and library.flags.noParryCooldown ~= true) then
+					
+					
+					
+					
+					
+					Lab.setNoParryCooldown(true);
+					functions.autoParry(true);
+				end;
+			end);
+
+			
+			
+			
+			if (not grappleDefaultApplied and getgenv().vairUiReady == true
+				and library.hasInit == true and not isStale()) then
+				local map = library.flags.grappleStyles;
+				local anyTrue = false;
+
+				if (type(map) == 'table') then
+					for _, v in next, map do
+						if (v == true) then anyTrue = true break end;
+					end;
+				end;
+
+				
+				local onlyOldBoxing = false;
+
+				if (type(map) == 'table') then
+					local count = 0;
+					onlyOldBoxing = true;
+
+					for k, v in next, map do
+						if (v == true) then
+							count += 1;
+
+							if (k ~= 'boxing') then onlyOldBoxing = false break end;
+						end;
+					end;
+
+					onlyOldBoxing = onlyOldBoxing and count == 1;
+				end;
+
+				if (not anyTrue or onlyOldBoxing) then
+					local opt = library.options.grappleStyles;
+
+					
+					if (opt and type(opt.SetValue) == 'function' and type(opt.values) == 'table' and #opt.values > 0) then
+						local init = {};
+
+						for _, name in next, opt.values do
+							init[name] = (name == 'wrestling'
+								or name == 'wrestling (觉醒)'
+								or name == 'muaythai (觉醒)'
+								or name == 'perfectcopy');
+						end;
+
+						local applied = pcall(function() opt:SetValue(init) end);
+
+						if (applied) then
+							grappleDefaultApplied = true;
+						end;
+					end;
+					
+				else
+					grappleDefaultApplied = true;
+				end;
+			end;
+		end;
+	end);
+
 
 	
 	
