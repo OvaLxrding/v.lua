@@ -1,7 +1,7 @@
 do
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 20:58:45
+    生成时间: 2026-11-01 21:04:43
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -847,27 +847,24 @@ do
     
     
     
+    
+    
+    
+    
     local TOUCH_UI = false;
 
-    pcall(function()
-        local forced = getgenv().__vairForceTouchUI;
-
-        if (forced ~= nil) then
-            TOUCH_UI = (forced == true);
-            return;
-        end;
-
-        local UIS = game:GetService('UserInputService');
-
-        
-        
-        TOUCH_UI = (UIS.TouchEnabled == true) or (UIS.AccelerometerEnabled == true);
-    end);
-
-    local ROW_H = TOUCH_UI and 46 or 20;    
-    local BOX = TOUCH_UI and 22 or 12;      
-    local BOX_X = TOUCH_UI and 10 or 6;     
-    local TEXT_X = BOX_X + BOX + (TOUCH_UI and 12 or 6);  
+    
+    
+    
+    
+    
+    
+    
+    
+    local ROW_H = 20;
+    local BOX = 12;
+    local BOX_X = 6;
+    local TEXT_X = 24;
 
     local function createToggle(option, parent)
         option.hasInit = true
@@ -16841,6 +16838,14 @@ do
 		local section = column:AddSection('版本更新');
 
 		local UPDATES = {
+			{
+				v = '1.1.166';
+				g = 'Gakuran';
+				at = '2026-11-01 21:45';
+				lines = {
+					'统一恢复出厂界面布局，修复控件重叠与点错';
+				};
+			};
 			{
 				v = '1.1.165';
 				g = 'Gakuran';
