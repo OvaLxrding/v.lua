@@ -19,7 +19,7 @@ if (type(MODULES) ~= 'table') then
 end;
 --[[
     v.air —— 单文件打包产物（Gakuran）
-    生成时间: 2026-11-01 10:23:04
+    生成时间: 2026-11-01 10:36:23
     说明: 所有模块已内联，不需要任何本地服务器 / 远端仓库，直接执行即可。
 ]]
 
@@ -58,24 +58,55 @@ do
         };
     end;
 
+    -- 不管原生返回什么，最后都保证 event 带 Connect / Fire。
+    -- Delta 的原生 create_comm_channel 返回的是自定义 CommChannel 对象
+    -- （userdata / 带 __index 的 table），不是 Instance ——
+    -- 以前只判断 Instance，于是它原样穿透到 createBaseESP，
+    -- 那边 commEvent:Connect 就报
+    -- attempt to call missing method 'Connect' of CommChannel。
+    -- Potassium 返回 Instance，所以 Potassium 没事。
+    local function ensureWrapped(event)
+        if (event == nil) then
+            return wrapCommEvent(Instance.new('BindableEvent'));
+        end;
+
+        -- 已经是包好的 table（有 _event 字段）
+        if (typeof(event) == 'table' and rawget(event, '_event') ~= nil) then
+            return event;
+        end;
+
+        -- 原生 BindableEvent Instance：它的 Event 是 RBXScriptSignal，能直接 Connect
+        if (typeof(event) == 'Instance') then
+            local okBindable = pcall(function() return event:IsA('BindableEvent') end);
+
+            if (okBindable) then
+                return wrapCommEvent(event);
+            end;
+        end;
+
+        -- 其它任何类型（Delta 的 CommChannel userdata 等）：
+        -- 拿一个独立 BindableEvent 包一层，语义完全自给自足，不依赖原生对象的 API。
+        return wrapCommEvent(Instance.new('BindableEvent'));
+    end;
+
     getgenv().create_comm_channel = function()
         if (type(nativeChannel) ~= 'function') then
-            return tostring(os.time()), wrapCommEvent(Instance.new('BindableEvent'));
+            return tostring(os.time()), ensureWrapped(nil);
         end;
 
-        local id, event = nativeChannel();
+        local okNative, id, event = pcall(nativeChannel);
 
-        if (typeof(event) == 'Instance') then
-            event = wrapCommEvent(event);
+        if (not okNative) then
+            return tostring(os.time()), ensureWrapped(nil);
         end;
 
-        return id, event;
+        return id, ensureWrapped(event);
     end;
 
     local nativeGetChannel = getgenv().get_comm_channel;
 
     getgenv().get_comm_channel = function(id)
-        if (typeof(id) == 'table') then
+        if (typeof(id) == 'table' and rawget(id, '_event') ~= nil) then
             return id;
         end;
 
@@ -83,13 +114,13 @@ do
             return nil;
         end;
 
-        local event = nativeGetChannel(id);
+        local okNative, event = pcall(nativeGetChannel, id);
 
-        if (typeof(event) == 'Instance') then
-            event = wrapCommEvent(event);
+        if (not okNative) then
+            return nil;
         end;
 
-        return event;
+        return ensureWrapped(event);
     end;
 end;
 
