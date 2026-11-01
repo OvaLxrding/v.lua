@@ -1,5 +1,5 @@
 {
-  "version": "1.1.87",
+  "version": "1.1.88",
   "encrypted": true,
   "alg": "chacha20",
   "counter": 1,
@@ -10,8 +10,8 @@
       "bytes": 205525,
       "plainBytes": 154135,
       "obfBytes": 154142,
-      "checksum": 1919837175,
-      "sha256": "bba4c2a2fa6c5b7b460ee3c36083c868ee9bbf4b2ee06fa02cbc1f1206e13c26",
+      "checksum": 2164863909,
+      "sha256": "e0ca63ba575c726c6e0ec4e33bfa82a79abaa489ca665cfafee3bda29d51ff00",
       "nonce": "340rwxPxJTTziKoL",
       "runtime": false
     },

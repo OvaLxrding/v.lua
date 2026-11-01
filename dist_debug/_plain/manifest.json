@@ -1,11 +1,11 @@
 {
-  "version": "1.1.87",
+  "version": "1.1.88",
   "chunks": [
     {
       "name": "01-core.lua",
       "file": "chunks/01-core.lua",
       "bytes": 154142,
-      "checksum": 491356907,
+      "checksum": 1430178461,
       "runtime": false
     },
     {
